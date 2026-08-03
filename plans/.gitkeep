@@ -1,0 +1,3 @@
+# Terraform Plans
+# Store plans here: plans/<service>/<env>/terraform-plan.md
+#                   plans/<service>/<env>/terraform-plan-output.txt

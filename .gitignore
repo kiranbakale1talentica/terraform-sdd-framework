@@ -1,0 +1,47 @@
+# Terraform state files — NEVER commit
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
+
+# Terraform plan binary files
+tfplan
+*.tfplan
+
+# Terraform working directories
+.terraform/
+.terraform.lock.hcl
+
+# Terraform variable files with sensitive content
+# DO commit terraform.tfvars (non-sensitive defaults)
+# DO NOT commit override files or env-specific files with secrets
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Backend config files (may contain bucket names / keys — consider if sensitive)
+# Uncomment if backend configs contain sensitive information:
+# backends/*.tfbackend
+
+# Infracost
+.infracost/
+infracost.json
+
+# Checkov
+.checkov.baseline
+
+# tfsec
+.tfsec/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Crash log files
+crash.log
+crash.*.log

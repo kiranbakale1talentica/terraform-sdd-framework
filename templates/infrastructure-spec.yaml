@@ -1,0 +1,171 @@
+# Infrastructure Specification Template
+#
+# Usage: Copy this file to specs/<service>/<env>/infrastructure-spec.yaml
+# Fill in all fields. Fields marked REQUIRED must be completed before /plan.
+# Fields marked OPTIONAL can be left as null if not applicable.
+#
+# This file is the source of truth for the infrastructure. Keep it updated.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─── Identity ────────────────────────────────────────────────────────────────
+metadata:
+  service_name: ""              # REQUIRED: Short identifier (e.g., api-service, data-pipeline)
+  display_name: ""              # REQUIRED: Human-readable name
+  description: ""               # REQUIRED: What does this service do?
+  owner: ""                     # REQUIRED: Team or individual responsible
+  cost_center: ""               # REQUIRED: Billing/cost allocation code
+  spec_version: "1.0"
+  status: draft                 # draft | approved | superseded
+  created_date: ""              # YYYY-MM-DD
+  approved_date: null           # YYYY-MM-DD — set when approved
+  approved_by: null             # Name or team
+
+# ─── Environment ─────────────────────────────────────────────────────────────
+environments:
+  target:                       # REQUIRED: List environments being provisioned
+    - dev                       # dev | test | staging | prod
+  isolation: per_environment    # per_environment | shared_services | custom
+  promotion_strategy: ""        # How changes move from dev → prod
+
+# ─── Cloud ───────────────────────────────────────────────────────────────────
+cloud:
+  provider: ""                  # REQUIRED: aws | azure | gcp | multi-cloud
+  regions:                      # REQUIRED: Primary region(s)
+    primary: ""                 # e.g., us-east-1 / eastus / us-central1
+    dr: null                    # Disaster recovery region (if applicable)
+  accounts:                     # OPTIONAL: Account/subscription/project IDs
+    dev: null
+    staging: null
+    prod: null
+
+# ─── Workload ────────────────────────────────────────────────────────────────
+workload:
+  type: ""                      # REQUIRED: One of:
+                                #   container-service | kubernetes | serverless
+                                #   vm | data-pipeline | frontend-hosting
+                                #   backend-api | ai-ml | database | message-queue | other
+  runtime: ""                   # e.g., Docker / Python 3.12 / Node 22 / .NET 8
+  language: ""                  # Primary language
+  framework: ""                 # e.g., Spring Boot / FastAPI / Express
+  expected_peak_instances: null # number
+  expected_rps: null            # Requests per second at peak
+  latency_sla_ms: null          # Target p99 latency in milliseconds
+  stateful: false               # Does the service have local state?
+
+# ─── Networking ──────────────────────────────────────────────────────────────
+networking:
+  public_internet_access: false # Does this service receive public traffic?
+  public_access_method: null    # load-balancer | direct | cdn | null
+  vpc_required: true            # Is a dedicated VPC/VNet needed?
+  vpc_cidr: null                # e.g., 10.10.0.0/16
+  subnet_strategy: ""           # public-private | all-private | custom
+  cross_service_communication: # How does this service talk to others?
+    method: ""                  # same-vpc | service-mesh | api-gateway | direct
+    services: []                # List of other services this communicates with
+  dns:
+    custom_domain: null         # e.g., api.example.com
+    private_dns: false          # Private DNS zone needed?
+  cdn_required: false           # CDN / content distribution needed?
+  vpn_required: false           # VPN / private connectivity to on-prem?
+  waf_required: false           # Web Application Firewall?
+  ddos_protection: basic        # none | basic | advanced
+
+# ─── Compute ─────────────────────────────────────────────────────────────────
+compute:
+  instance_type: null           # Provider-specific (e.g., t3.medium / Standard_D2s_v3 / e2-medium)
+  instance_count_min: 1
+  instance_count_max: 1
+  auto_scaling: false
+  auto_scaling_triggers: []     # cpu | memory | request-rate | custom-metric | schedule
+  spot_acceptable: false        # Can spot/preemptible instances be used?
+
+# ─── Security ────────────────────────────────────────────────────────────────
+security:
+  compliance_frameworks: []     # pci-dss | soc2 | hipaa | iso27001 | gdpr | none
+  data_classification: internal # public | internal | confidential | restricted
+  iam:
+    identity_model: ""          # iam-roles | workload-identity | managed-identity | service-account
+    cross_account_access: false
+    mfa_required: false
+  secrets_management:
+    provider: ""                # aws-secrets-manager | azure-key-vault | gcp-secret-manager | vault
+    secret_paths: []            # List of secret paths/names that will be needed
+  encryption:
+    at_rest: true               # REQUIRED for all data stores
+    at_rest_key_type: provider-managed  # provider-managed | customer-managed
+    in_transit: true            # REQUIRED
+    tls_version_minimum: "1.2"
+  network_policy: default-deny  # default-deny | open (document reason if open)
+  vulnerability_scanning: true  # Container image scanning
+  audit_logging: true
+
+# ─── Scaling and Availability ─────────────────────────────────────────────────
+availability:
+  sla_target_percent: 99.9     # e.g., 99 | 99.9 | 99.99
+  multi_az: false              # Deploy across multiple availability zones?
+  multi_region: false          # Deploy across multiple regions?
+  ha_model: null               # active-active | active-passive | null
+  zero_downtime_deployments: true
+
+# ─── Disaster Recovery ────────────────────────────────────────────────────────
+disaster_recovery:
+  rto_hours: null              # Recovery Time Objective (hours)
+  rpo_hours: null              # Recovery Point Objective (hours)
+  backup_frequency: daily      # hourly | daily | weekly
+  backup_retention_days: 7
+  cross_region_backup: false
+  dr_runbook_required: false
+
+# ─── Data Stores ─────────────────────────────────────────────────────────────
+data_stores: []
+# Each entry:
+# - type: ""                   # relational | nosql | cache | object-storage | search | warehouse
+#   engine: ""                 # postgres | mysql | redis | s3 | dynamodb | elasticsearch
+#   size: null                 # Instance class or size
+#   storage_gb: null
+#   multi_az: false
+#   read_replicas: 0
+#   backup_enabled: true
+#   backup_retention_days: 7
+
+# ─── Observability ────────────────────────────────────────────────────────────
+observability:
+  metrics:
+    enabled: true
+    platform: ""               # cloudwatch | azure-monitor | cloud-monitoring | datadog | prometheus
+  logging:
+    enabled: true
+    platform: ""               # cloudwatch-logs | log-analytics | cloud-logging | splunk | datadog
+    retention_days: 30
+  tracing:
+    enabled: false
+    platform: null             # xray | jaeger | cloud-trace | datadog-apm
+  alerting:
+    enabled: true
+    channels: []               # pagerduty | opsgenie | slack | email
+    alert_on: []               # high-error-rate | high-latency | high-cpu | disk-full | cost-anomaly
+  dashboards:
+    required: false
+    platform: null             # cloudwatch | azure-dashboard | cloud-monitoring | grafana | datadog
+
+# ─── Cost ─────────────────────────────────────────────────────────────────────
+cost:
+  monthly_budget_usd: null     # Target monthly budget
+  cost_anomaly_alerts: true
+  reserved_instances: false    # Use reserved instances or committed use?
+  cost_optimization_notes: ""
+
+# ─── Open Questions ───────────────────────────────────────────────────────────
+open_questions: []
+# Each entry:
+# - question: ""
+#   blocking: true             # Does this block /plan?
+#   owner: ""                  # Who needs to answer this?
+#   due_date: null
+
+# ─── Decisions Log ────────────────────────────────────────────────────────────
+decisions: []
+# Each entry:
+# - decision: ""
+#   adr_file: ""               # Path to ADR file
+#   date: ""

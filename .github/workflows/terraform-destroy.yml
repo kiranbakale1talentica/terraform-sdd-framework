@@ -1,0 +1,75 @@
+name: Terraform Destroy
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to destroy (e.g., api-service)'
+        required: true
+        type: string
+      environment:
+        description: 'Environment to destroy'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      confirm_destroy:
+        description: 'Type "DESTROY" to confirm'
+        required: true
+        type: string
+
+permissions:
+  id-token: write # Required for AWS OIDC
+  contents: read
+
+env:
+  TF_VERSION: "1.6.0"
+  AWS_REGION: "us-east-1"
+  OIDC_ROLE_ARN: "arn:aws:iam::123456789012:role/github-actions-terraform-role"
+
+jobs:
+  destroy:
+    name: Destroy ${{ github.event.inputs.service }}/${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    
+    # Use GitHub environments to enforce manual approval rules, especially for prod
+    environment: ${{ github.event.inputs.environment }}
+
+    defaults:
+      run:
+        working-directory: ./terraform/services/${{ github.event.inputs.service }}/${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Verify Confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm_destroy }}" != "DESTROY" ]; then
+            echo "Error: Confirmation string did not match 'DESTROY'."
+            exit 1
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.OIDC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        # run: terraform init -backend-config=../../../backends/${{ github.event.inputs.environment }}.tfbackend
+        run: terraform init -backend=false
+
+      # In a real setup, this would run the destroy
+      # - name: Terraform Destroy
+      #   run: terraform destroy -auto-approve -var-file=terraform.tfvars
+      
+      - name: Dry Run Notice
+        run: echo "This is a template pipeline. In a real setup, terraform destroy would run here."

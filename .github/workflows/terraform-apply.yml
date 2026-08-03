@@ -1,0 +1,68 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'terraform/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+permissions:
+  id-token: write # Required for AWS OIDC
+  contents: read  # Required to checkout code
+
+env:
+  TF_VERSION: "1.6.0"
+  AWS_REGION: "us-east-1"
+  OIDC_ROLE_ARN: "arn:aws:iam::123456789012:role/github-actions-terraform-role"
+
+jobs:
+  apply:
+    name: Apply to ${{ github.event.inputs.environment || 'dev' }}
+    runs-on: ubuntu-latest
+    
+    # Use GitHub environments to enforce manual approval rules for prod
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+
+    defaults:
+      run:
+        working-directory: ./terraform/services/api-service/${{ github.event.inputs.environment || 'dev' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.OIDC_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Terraform Init
+        # In a real environment, provide backend config:
+        # run: terraform init -backend-config=../../../backends/${{ github.event.inputs.environment || 'dev' }}.tfbackend
+        run: terraform init -backend=false
+
+      # In a real environment, uncomment to run apply
+      # - name: Terraform Apply
+      #   run: terraform apply -auto-approve -var-file=terraform.tfvars
+      #   env:
+      #     TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+      
+      - name: Dry Run Notice
+        run: echo "This is a template pipeline. In a real setup, terraform apply would run here."

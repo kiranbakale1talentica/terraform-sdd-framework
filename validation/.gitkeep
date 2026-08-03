@@ -1,0 +1,5 @@
+# Validation Reports
+# Store reports here:
+#   validation/terraform-report.md   — fmt + validate + tflint results
+#   validation/security-report.md    — Checkov + tfsec findings and exceptions
+#   validation/cost-report.md        — Infracost estimate

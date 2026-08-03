@@ -1,0 +1,2 @@
+# Terraform services directory
+# Place service environments here: services/<service-name>/<env>/
