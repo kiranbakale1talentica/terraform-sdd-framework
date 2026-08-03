@@ -139,19 +139,7 @@ The agent will execute the 6-phase gated lifecycle:
 * **Secrets:** Injected exclusively via `TF_VAR_` environment variables or Secrets Manager in CI/CD pipelines. Never committed to `.tfvars`.
 * **State Management:** Remote backend (S3 + DynamoDB locking) with partial CLI configuration.
 
----
 
-## 💡 Suggested Repository Names
-
-If you are pushing this framework to a new GitHub repository, here are recommended repository names:
-
-1. `spec-driven-terraform` *(Current default — clean & descriptive)*
-2. `terraform-sdd-framework` *(Emphasizes Specification Driven Development)*
-3. `aws-terraform-sdd` *(Highlights AWS + SDD target stack)*
-4. `cloud-sdd-engine` *(Broader platform engineering focus)*
-5. `tf-spec-ops` *(Short & catchy)*
-
----
 
 ## 📄 License & References
 
