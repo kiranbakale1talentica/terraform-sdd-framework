@@ -1,4 +1,0 @@
-# Infrastructure Specifications
-# Store specs here: specs/<service>/<env>/infrastructure-spec.yaml
-#                   specs/<service>/<env>/architecture.md
-#                   specs/<service>/<env>/decisions/ADR-NNN-<title>.md

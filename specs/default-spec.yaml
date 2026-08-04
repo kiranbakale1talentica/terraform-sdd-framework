@@ -1,0 +1,173 @@
+# Infrastructure Specification — Default Starter
+
+# Usage Instructions:
+#   1. Copy this file to specs/<service-name>/<env>/infrastructure-spec.yaml
+#   2. Fill in all REQUIRED fields.
+#   3. Run `/spec` with your AI agent to complete the interview and validate this spec.
+#   4. Do NOT proceed to /plan until this file status is changed to "approved".
+#
+# This file is the source of truth for the infrastructure. Keep it updated.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ─── Identity ────────────────────────────────────────────────────────────────
+metadata:
+  service_name: "my-service"        # REQUIRED: Short kebab-case identifier
+  display_name: "My Service"        # REQUIRED: Human-readable name
+  description: "Describe what this service does and why it needs infrastructure."
+  owner: "platform-team"            # REQUIRED: Team or individual responsible
+  cost_center: "cc-0000"            # REQUIRED: Billing/cost allocation code
+  spec_version: "1.0"
+  status: draft                     # draft | approved | superseded
+  created_date: ""                  # YYYY-MM-DD — fill in today's date
+  approved_date: null               # Set when status moves to "approved"
+  approved_by: null                 # Name or team who approved
+
+# ─── Environment ─────────────────────────────────────────────────────────────
+environments:
+  target:
+    - dev                           # Start with dev; add staging/prod when ready
+  isolation: per_environment        # per_environment | shared_services | custom
+  promotion_strategy: "manual PR approval from dev → staging → prod"
+
+# ─── Cloud ───────────────────────────────────────────────────────────────────
+cloud:
+  provider: ""                      # REQUIRED: aws | azure | gcp | multi-cloud
+  regions:
+    primary: ""                     # REQUIRED: e.g., us-east-1 / eastus / us-central1
+    dr: null                        # Disaster recovery region (leave null if not needed)
+  accounts:
+    dev: null                       # Account/subscription/project ID for dev
+    staging: null
+    prod: null
+
+# ─── Workload ────────────────────────────────────────────────────────────────
+workload:
+  type: ""                          # REQUIRED: One of:
+                                    #   container-service | kubernetes | serverless
+                                    #   vm | data-pipeline | frontend-hosting
+                                    #   backend-api | ai-ml | database | message-queue | other
+  runtime: ""                       # e.g., Docker / Python 3.12 / Node 22 / .NET 8
+  language: ""                      # Primary programming language
+  framework: ""                     # e.g., FastAPI / Express / Spring Boot
+  expected_peak_instances: null     # Maximum number of instances at peak load
+  expected_rps: null                # Requests per second at peak
+  latency_sla_ms: null              # Target p99 latency in milliseconds
+  stateful: false                   # Does the service have local state?
+
+# ─── Networking ──────────────────────────────────────────────────────────────
+networking:
+  public_internet_access: false     # Does this service receive public traffic?
+  public_access_method: null        # load-balancer | direct | cdn | null
+  vpc_required: true                # Is a dedicated VPC/VNet needed?
+  vpc_cidr: null                    # e.g., 10.10.0.0/16 — fill in if vpc_required = true
+  subnet_strategy: ""               # public-private | all-private | custom
+  cross_service_communication:
+    method: ""                      # same-vpc | service-mesh | api-gateway | direct
+    services: []                    # List of other services this talks to
+  dns:
+    custom_domain: null             # e.g., api.example.com — null if not needed
+    private_dns: false              # Private DNS zone needed?
+  cdn_required: false               # CDN / content distribution needed?
+  vpn_required: false               # Private connectivity to on-prem needed?
+  waf_required: false               # Web Application Firewall needed?
+  ddos_protection: basic            # none | basic | advanced
+
+# ─── Compute ─────────────────────────────────────────────────────────────────
+compute:
+  instance_type: null               # Provider-specific (e.g., t3.medium / Standard_D2s_v3)
+  instance_count_min: 1
+  instance_count_max: 1
+  auto_scaling: false
+  auto_scaling_triggers: []         # cpu | memory | request-rate | custom-metric | schedule
+  spot_acceptable: false            # Can cheaper spot/preemptible instances be used?
+
+# ─── Security ────────────────────────────────────────────────────────────────
+security:
+  compliance_frameworks: []         # pci-dss | soc2 | hipaa | iso27001 | gdpr | none
+  data_classification: internal     # public | internal | confidential | restricted
+  iam:
+    identity_model: ""              # iam-roles | workload-identity | managed-identity | service-account
+    cross_account_access: false
+    mfa_required: false
+  secrets_management:
+    provider: ""                    # aws-secrets-manager | azure-key-vault | gcp-secret-manager | vault
+    secret_paths: []                # List of secret paths/names the service needs
+  encryption:
+    at_rest: true                   # REQUIRED — must be true for all data stores
+    at_rest_key_type: provider-managed   # provider-managed | customer-managed
+    in_transit: true                # REQUIRED
+    tls_version_minimum: "1.2"
+  network_policy: default-deny      # default-deny | open (document reason if open)
+  vulnerability_scanning: true
+  audit_logging: true
+
+# ─── Availability ─────────────────────────────────────────────────────────────
+availability:
+  sla_target_percent: 99.9          # e.g., 99 | 99.9 | 99.99
+  multi_az: false                   # Deploy across multiple availability zones?
+  multi_region: false               # Deploy across multiple regions?
+  ha_model: null                    # active-active | active-passive | null
+  zero_downtime_deployments: true
+
+# ─── Disaster Recovery ────────────────────────────────────────────────────────
+disaster_recovery:
+  rto_hours: null                   # Recovery Time Objective in hours
+  rpo_hours: null                   # Recovery Point Objective in hours
+  backup_frequency: daily           # hourly | daily | weekly
+  backup_retention_days: 7
+  cross_region_backup: false
+  dr_runbook_required: false
+
+# ─── Data Stores ─────────────────────────────────────────────────────────────
+data_stores: []
+# Uncomment and fill in for each data store your service needs:
+# - type: ""                        # relational | nosql | cache | object-storage | search
+#   engine: ""                      # postgres | mysql | redis | s3 | dynamodb | mongodb
+#   size: null                      # Instance class or size
+#   storage_gb: null
+#   multi_az: false
+#   read_replicas: 0
+#   backup_enabled: true
+#   backup_retention_days: 7
+
+# ─── Observability ────────────────────────────────────────────────────────────
+observability:
+  metrics:
+    enabled: true
+    platform: ""                    # cloudwatch | azure-monitor | cloud-monitoring | datadog | prometheus
+  logging:
+    enabled: true
+    platform: ""                    # cloudwatch-logs | log-analytics | cloud-logging | splunk | datadog
+    retention_days: 30
+  tracing:
+    enabled: false
+    platform: null                  # xray | jaeger | cloud-trace | datadog-apm | null
+  alerting:
+    enabled: true
+    channels: []                    # pagerduty | opsgenie | slack | email
+    alert_on: []                    # high-error-rate | high-latency | high-cpu | disk-full
+  dashboards:
+    required: false
+    platform: null                  # cloudwatch | grafana | datadog | null
+
+# ─── Cost ─────────────────────────────────────────────────────────────────────
+cost:
+  monthly_budget_usd: null          # Target monthly spend in USD
+  cost_anomaly_alerts: true
+  reserved_instances: false         # Use reserved instances or committed use discounts?
+  cost_optimization_notes: ""
+
+# ─── Open Questions ───────────────────────────────────────────────────────────
+# List anything that is still unknown and must be resolved before /plan.
+open_questions: []
+# - question: "Do we need a custom domain for this service?"
+#   blocking: true
+#   owner: "product-team"
+#   due_date: null
+
+# ─── Decisions Log ────────────────────────────────────────────────────────────
+# Record key decisions made during /spec for audit trail.
+decisions: []
+# - decision: "Chose ECS Fargate over EC2 for simpler operations overhead."
+#   adr_file: "specs/my-service/dev/decisions/ADR-001-compute-selection.md"
+#   date: "YYYY-MM-DD"

@@ -1,147 +1,216 @@
-# Terraform Specification Driven Development (SDD)
+# Terraform SDD Framework
 
-> **A production-grade, AI-agent compatible workflow for designing, generating, validating, and deploying cloud infrastructure with Terraform.**
-
----
-
-## 🎯 Assumptions & Target Architecture
-
-This repository is tailored for modern cloud platform engineering with the following core stack assumptions:
-
-* **Cloud Provider:** **AWS (Amazon Web Services)**
-  * **Frontend Hosting (React / SPA / Static Web):** S3 Bucket (Private) + CloudFront CDN + Origin Access Control (OAC) + Route53 + ACM SSL/TLS.
-  * **Backend API Hosting:** VPC (Multi-AZ) + ECS Fargate + Application Load Balancer (ALB) + RDS Database (PostgreSQL/MySQL).
-* **CI/CD Automation:** **GitHub Actions** for automated quality gates (`fmt`, `validate`, `tflint`, `checkov`) and deployment pipelines.
-* **Authentication & Security:** **AWS OIDC (OpenID Connect)** federated authentication for GitHub Actions. Zero long-lived AWS Access Keys stored in GitHub Secrets.
+> **A cloud-provider-neutral starter kit for Specification Driven Development (SDD) of cloud infrastructure with Terraform.**
 
 ---
 
-## 🛠️ Prerequisites
+## What Is This?
 
-Before using or extending this repository on your local system or within an AI Agent environment, ensure the following prerequisites are installed and configured:
+This is a **starter kit** — not a ready-to-deploy stack. It gives you a reusable, AI-agent-compatible workflow and repository structure so your team can design, generate, validate, and deploy cloud infrastructure in a consistent, auditable way.
 
-### 1. Developer CLI Tools
-* **Git** (`>= 2.40`)
-* **Terraform CLI** (`>= 1.6.0, < 2.0.0`)
-* **AWS CLI v2** (configured for local testing/planning)
-* **Node.js** (`>= 18.x`) & **npm** (if building React/frontend apps prior to deployment)
+It enforces a structured **6-phase gated lifecycle** before any `terraform apply` ever runs:
 
-### 2. Validation & Security Tools
-* **TFLint** (`>= v0.50.0`) with AWS ruleset (`tflint-ruleset-aws`)
-* **Checkov** (`>= 3.0.0`) or **tfsec** (for static security policy scanning)
-* **Infracost** *(optional)* for cloud cost estimation
-
-### 3. Agent Skills Framework
-This repository follows the **Agent Skills** pattern (inspired by [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) and [hashicorp/agent-skills](https://github.com/hashicorp/agent-skills)):
-* Local skills are located in `.agents/skills/`:
-  * `terraform-sdd` (Custom 6-phase gated lifecycle: `/spec` → `/plan` → `/build` → `/test` → `/review` → `/ship`)
-  * `terraform-style-guide` (Official HashiCorp code style conventions)
-  * `terraform-test` (Native HCL unit & integration testing)
-  * `refactor-module` (Terraform module refactoring patterns)
-  * `terraform-policy` (Sentinel & OPA policy enforcement)
-  * `azure-verified-modules` / `terraform-stacks` / `terraform-search-import`
-
-### 4. AWS OIDC Configuration (for GitHub Actions)
-To enable secure automated deployments via GitHub Actions:
-1. Create an AWS IAM OIDC Identity Provider for `https://token.actions.githubusercontent.com`.
-2. Create an IAM Role (e.g., `arn:aws:iam::<ACCOUNT_ID>:role/github-actions-terraform-role`) trusting `repo:<your-github-org>/<your-repo-name>:*`.
-3. Update `OIDC_ROLE_ARN` in `.github/workflows/terraform-plan.yml`, `terraform-apply.yml`, and `terraform-destroy.yml`.
+```
+/spec → /plan → /build → /test → /review → /ship
+```
 
 ---
 
-## 🚀 Quick Start
+## Default Stack (Override Per Project)
 
-### As an Engineer with an AI Assistant
-
-Describe what you need to build:
-
-> *"I want to host my React app on AWS using S3 and CloudFront. Let's start with `/spec`."*
-
-The agent will execute the 6-phase gated lifecycle:
-1. **`/spec`** — Infrastructure discovery interview → `specs/<service>/<env>/infrastructure-spec.yaml`
-2. **`/plan`** — Architecture design & ADRs → `specs/<service>/<env>/architecture.md` & `plans/`
-3. **`/build`** — Terraform code generation → `terraform/modules/` + `terraform/services/`
-4. **`/test`** — Quality checks → `terraform fmt` + `validate` + `tflint`
-5. **`/review`** — Security & cost checks → Checkov + Infracost
-6. **`/ship`** — Deployment readiness sign-off & GitHub Actions deployment
-
-### Slash Commands
-
-| Command | Phase | Description |
-|---------|-------|-------------|
-| `/spec` | 1 | Discovery interview → `infrastructure-spec.yaml` |
-| `/plan` | 2 | Architecture document & ADR decisions |
-| `/build` | 3 | Terraform module and service root generation |
-| `/test` | 4 | `fmt` + `validate` + `tflint` + unit tests |
-| `/review` | 5 | Security scanning + cost estimation |
-| `/ship` | 6 | Deployment readiness checklist + CI/CD apply |
+| Component | Default |
+|-----------|---------|
+| **Cloud** | Configured during `/spec` — AWS, Azure, GCP, or multi-cloud |
+| **CI/CD** | GitHub Actions (`.github/workflows/`) |
+| **Auth** | OIDC federated identity (no long-lived credentials) |
+| **IaC** | Terraform `>= 1.6.0` |
+| **Quality** | TFLint + Checkov + Infracost |
 
 ---
 
-## 📁 Repository Structure
+## Prerequisites
+
+Before using this starter kit, install the following on your system:
+
+### Developer Tools
+| Tool | Version | Install |
+|------|---------|---------|
+| Git | `>= 2.40` | [git-scm.com](https://git-scm.com/) |
+| Terraform CLI | `>= 1.6.0` | [developer.hashicorp.com](https://developer.hashicorp.com/terraform/install) |
+| Pre-commit | Latest | `pip install pre-commit` |
+| AWS CLI v2 *(if using AWS)* | Latest | [aws.amazon.com/cli](https://aws.amazon.com/cli/) |
+
+### Validation & Security Tools
+| Tool | Purpose | Install |
+|------|---------|---------|
+| TFLint | Terraform best-practice linting | [tflint.io](https://github.com/terraform-linters/tflint) |
+| Checkov | Security policy scanning | `pip install checkov` |
+| Gitleaks | Secret detection in commits | [gitleaks.io](https://github.com/gitleaks/gitleaks) |
+| Infracost *(optional)* | Cloud cost estimation | [infracost.io](https://www.infracost.io/) |
+| terraform-docs *(optional)* | Auto-generate module docs | [terraform-docs.io](https://terraform-docs.io/) |
+
+### Agent Skills (AI Assistant Integration)
+This framework is designed to work with AI coding agents that support the Agent Skills pattern:
+- **[addyosmani/agent-skills](https://github.com/addyosmani/agent-skills)** — Core skill protocol
+- **[hashicorp/agent-skills](https://github.com/hashicorp/agent-skills)** — Official HashiCorp Terraform skills
+
+Skills are pre-installed in `.agents/skills/`. No additional setup needed.
+
+---
+
+## Getting Started
+
+### 1. Clone this Repository
+
+```bash
+git clone https://github.com/kiranbakale1talentica/terraform-sdd-framework.git my-infra
+cd my-infra
+```
+
+### 2. Install Pre-commit Hooks
+
+```bash
+pre-commit install
+```
+
+### 3. Configure Your Cloud Credentials
+
+Follow your cloud provider's guide for local authentication:
+- **AWS:** `aws configure` or set up `AWS_PROFILE`
+- **Azure:** `az login`
+- **GCP:** `gcloud auth application-default login`
+
+### 4. Set Up GitHub Actions OIDC (For CI/CD)
+
+Configure your cloud provider to trust GitHub Actions via OIDC (no access keys needed):
+- **AWS:** [docs.github.com — AWS OIDC](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services)
+- **Azure:** [docs.github.com — Azure OIDC](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-azure)
+- **GCP:** [docs.github.com — GCP OIDC](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-google-cloud-platform)
+
+Then update the `OIDC_ROLE_ARN` (or equivalent) in your `.github/workflows/*.yml` files.
+
+### 5. Start Your First Infrastructure Spec
+
+Copy the default spec and fill it in:
+
+```bash
+mkdir -p specs/my-service/dev
+cp specs/default-spec.yaml specs/my-service/dev/infrastructure-spec.yaml
+```
+
+Or, with an AI assistant, simply say:
+> *"I want to provision infrastructure for my service. Let's start with `/spec`."*
+
+---
+
+## Workflow — The 6 Phases
+
+### `/spec` — Discovery & Specification
+The agent interviews you about your workload and writes a complete `infrastructure-spec.yaml`.
+
+**Output:** `specs/<service>/<env>/infrastructure-spec.yaml`
+
+### `/plan` — Architecture & Decisions
+The agent designs the architecture, selects services, and logs every decision as an ADR.
+
+**Output:** `specs/<service>/<env>/architecture.md` + `decisions/ADR-NNN-*.md`
+
+### `/build` — Code Generation
+Terraform HCL is generated following HashiCorp's official style guide and your spec.
+
+**Output:** `terraform/modules/` + `terraform/services/<service>/<env>/`
+
+### `/test` — Quality Gates
+Automated checks run locally and in CI:
+```bash
+terraform fmt -recursive -check
+terraform init -backend=false && terraform validate
+tflint --recursive
+```
+
+### `/review` — Security & Cost
+A security scan and cost estimate are produced before any deployment is approved.
+```bash
+checkov -d . --framework terraform
+infracost breakdown --path .
+```
+
+### `/ship` — Deploy
+The `deployment-readiness.md` checklist is reviewed and signed off. The GitHub Actions apply workflow is triggered.
+
+---
+
+## Repository Structure
 
 ```
 .
-├── .agents/
-│   ├── AGENTS.md                          ← Workspace rules and Terraform conventions
-│   └── skills/
-│       ├── terraform-sdd/                 ← Core 6-phase SDD lifecycle skill
-│       ├── terraform-style-guide/         ← Official HashiCorp style guide
-│       ├── terraform-test/                ← HashiCorp testing skill
-│       └── ...                            ← Additional HashiCorp skills
+├── .agents/                     ← AI agent rules and Terraform skills
+│   ├── AGENTS.md                ← Workspace conventions and phase gate rules
+│   └── skills/                  ← Auto-loaded skill definitions
 │
 ├── .github/
 │   └── workflows/
-│       ├── terraform-plan.yml             ← CI Plan, Validate, TFLint, Checkov scan
-│       ├── terraform-apply.yml            ← CD Apply with OIDC & approval gates
-│       └── terraform-destroy.yml          ← CD Manual Destroy with approval gates
+│       ├── terraform-plan.yml   ← PR: fmt, lint, checkov, plan
+│       ├── terraform-apply.yml  ← Main: deploy with approval gates
+│       └── terraform-destroy.yml← Manual: teardown with approval gate
+│
+├── .pre-commit-config.yaml      ← Pre-commit hooks (fmt, secrets, validate)
+├── .tflint.hcl                  ← TFLint configuration
 │
 ├── terraform/
-│   ├── services/                          ← Per-service, per-environment Terraform roots
-│   └── modules/                           ← Reusable capability modules (networking, compute, etc.)
+│   ├── services/                ← Per-service, per-environment Terraform roots
+│   └── modules/                 ← Reusable capability modules
 │
-├── specs/                                 ← Infrastructure specs, architecture, ADRs
-├── plans/                                 ← Detailed technical plans
-├── validation/                            ← Linting, security, and cost reports
-├── templates/                             ← Spec & plan templates
-├── SPEC.md                                ← Master framework specification
-└── README.md                              ← This file
+├── specs/
+│   └── default-spec.yaml        ← Default starter spec (copy for new services)
+│
+├── plans/                       ← Technical plan documents
+├── validation/                  ← Lint, security, and cost reports
+├── templates/                   ← Document templates for each phase
+├── SPEC.md                      ← Framework master specification
+└── README.md                    ← This file
 ```
 
 ---
 
-## 🔐 Authentication & Security Model
+## Pre-commit Hooks
 
-```
- ┌──────────────────────┐         OIDC Token Exchange         ┌────────────────────────┐
- │                      │ ──────────────────────────────────> │                        │
- │  GitHub Actions CI   │                                     │     AWS IAM Role       │
- │  (Runner Execution)  │ <────────────────────────────────── │  (Short-lived creds)   │
- └──────────────────────┘       AssumeRoleWithWebIdentity     └────────────────────────┘
-            │                                                              │
-            ▼                                                              ▼
- ┌──────────────────────┐                                     ┌────────────────────────┐
- │  Terraform Execution │ ──────────────────────────────────> │     AWS Cloud Infra    │
- │ (Init/Plan/Apply)    │                                     │  (S3, CloudFront, etc) │
- └──────────────────────┘                                     └────────────────────────┘
-```
+This kit ships with a `.pre-commit-config.yaml` that runs automatically before every git commit:
 
-1. **Zero Permanent Credentials:** No `AWS_ACCESS_KEY_ID` or `AWS_SECRET_ACCESS_KEY` in GitHub Secrets.
-2. **Short-Lived Tokens:** GitHub Actions requests temporary AWS STS tokens using OIDC tokens (`id-token: write`).
-3. **Scoped Roles:** IAM roles are restricted by repository, branch, and environment.
+| Hook | What It Checks |
+|------|---------------|
+| `terraform_fmt` | HCL formatting is canonical |
+| `terraform_validate` | Syntax and type errors |
+| `terraform_tflint` | Best-practice violations |
+| `terraform_docs` | Module docs are up to date |
+| `gitleaks` | No secrets or credentials committed |
+| `check-yaml` / `check-json` | Valid YAML and JSON files |
+| `detect-private-key` | No private keys committed |
 
 ---
 
-## 📋 Terraform Standards
+## Terraform Coding Standards
 
-* **Module Design:** Capability-focused (`networking`, `compute`, `database`, `storage`).
-* **Tagging:** Mandatory default tags on all resources (`Project`, `Environment`, `ManagedBy`, `Service`, `Owner`, `CostCenter`).
-* **Secrets:** Injected exclusively via `TF_VAR_` environment variables or Secrets Manager in CI/CD pipelines. Never committed to `.tfvars`.
-* **State Management:** Remote backend (S3 + DynamoDB locking) with partial CLI configuration.
+- Modules represent **capabilities** (e.g., `networking`, `compute`, `database`), not services
+- All variables have `type` and `description`
+- All outputs have `description`
+- No hardcoded secrets, account IDs, regions, or passwords
+- Backend uses **partial configuration** — environment-specific values injected at CI time
+- Provider versions pinned with `~>` pessimistic constraint
 
+---
 
+## CI/CD Authentication
 
-## 📄 License & References
+This starter kit uses **OIDC federated identity** for all cloud deployments. This means GitHub Actions receives short-lived cloud credentials without any permanent access keys.
 
-- Built using the Agent Skills pattern from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills).
-- Integrated with official HashiCorp Agent Skills from [hashicorp/agent-skills](https://github.com/hashicorp/agent-skills).
+See [SPEC.md](SPEC.md) for the full security baseline and [docs/workflow.md](docs/workflow.md) for the end-to-end workflow guide.
+
+---
+
+## References
+
+- HashiCorp Terraform Style Guide — [developer.hashicorp.com](https://developer.hashicorp.com/terraform/language/style)
+- HashiCorp Agent Skills — [github.com/hashicorp/agent-skills](https://github.com/hashicorp/agent-skills)
+- Agent Skills Pattern — [github.com/addyosmani/agent-skills](https://github.com/addyosmani/agent-skills)
+- pre-commit-terraform — [github.com/antonbabenko/pre-commit-terraform](https://github.com/antonbabenko/pre-commit-terraform)

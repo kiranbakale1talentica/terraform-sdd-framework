@@ -1,0 +1,56 @@
+repos:
+  # ── Terraform Formatting ─────────────────────────────────────────────────────
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.96.2
+    hooks:
+      - id: terraform_fmt
+        name: Terraform Format
+        description: Runs `terraform fmt` to enforce canonical HCL formatting.
+
+      - id: terraform_validate
+        name: Terraform Validate
+        description: Runs `terraform validate` on all configurations.
+        args:
+          - --hook-config=--retry-once-with-cleanup=true
+
+      - id: terraform_tflint
+        name: TFLint
+        description: Runs tflint for best-practice linting.
+        args:
+          - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
+
+      - id: terraform_docs
+        name: Terraform Docs
+        description: Generates/updates README.md inside each module automatically.
+        args:
+          - --hook-config=--path-to-file=README.md
+          - --hook-config=--add-to-existing-file=true
+          - --hook-config=--create-file-if-not-exist=true
+
+  # ── Secret & Credential Detection ────────────────────────────────────────────
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.22.1
+    hooks:
+      - id: gitleaks
+        name: Gitleaks — Detect Secrets
+        description: Scans commits for accidentally committed secrets or credentials.
+
+  # ── General File Quality ─────────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+        name: Check YAML Syntax
+      - id: check-json
+        name: Check JSON Syntax
+      - id: end-of-file-fixer
+        name: Fix End of File
+      - id: trailing-whitespace
+        name: Trim Trailing Whitespace
+      - id: check-merge-conflict
+        name: Check for Merge Conflicts
+      - id: detect-private-key
+        name: Detect Private Keys
+      - id: check-added-large-files
+        name: Block Large File Commits
+        args: ["--maxkb=500"]
