@@ -26,8 +26,8 @@ jobs:
     # This example runs for the dev environment. In a real setup, you'd use a matrix
     # strategy or separate jobs to run against modified roots.
     defaults:
-      run:
-        working-directory: ./terraform/services/api-service/dev
+        # NOTE: Update 'YOUR_SERVICE_NAME' to match your actual service directory
+        working-directory: ./terraform/services/YOUR_SERVICE_NAME/dev
 
     steps:
       - name: Checkout code

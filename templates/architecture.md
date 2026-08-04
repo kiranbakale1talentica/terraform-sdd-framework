@@ -239,8 +239,8 @@ graph LR
 Secret path pattern: /<project>/<environment>/<service>/<secret-name>
 
 Examples:
-  /myapp/prod/api-service/db-password
-  /myapp/prod/api-service/jwt-secret
+  /myapp/prod/my-service/db-password
+  /myapp/prod/my-service/jwt-secret
 ```
 
 ### Encryption

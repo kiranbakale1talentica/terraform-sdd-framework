@@ -71,8 +71,8 @@ The agent will respond with the discovery interview. Here's an example session:
 ---
 
 After the interview, the agent:
-1. Writes `specs/api-service/dev/infrastructure-spec.yaml`
-2. Writes `specs/api-service/dev/architecture.md`
+1. Writes `specs/my-service/dev/infrastructure-spec.yaml`
+2. Writes `specs/my-service/dev/architecture.md`
 3. Writes any initial ADRs
 4. Asks: "Please review the spec and architecture. Type 'approved' to proceed to /plan."
 
@@ -85,7 +85,7 @@ After spec approval, you say: `/plan`
 The agent:
 1. Maps the Node.js REST API on AWS to: **ALB + ECS Fargate + RDS Aurora + ElastiCache Redis**
 2. Identifies required modules: `networking`, `iam`, `compute`, `database`, `monitoring`
-3. Writes `plans/api-service/dev/terraform-plan.md`
+3. Writes `plans/my-service/dev/terraform-plan.md`
 4. Asks for plan approval before writing any code
 
 ---
@@ -100,7 +100,7 @@ The agent generates Terraform in this order:
 3. `terraform/modules/database/` — RDS Aurora cluster
 4. `terraform/modules/compute/` — ECS Fargate service + ALB
 5. `terraform/modules/monitoring/` — CloudWatch log groups + alarms
-6. `terraform/services/api-service/dev/` — Root module calling all modules
+6. `terraform/services/my-service/dev/` — Root module calling all modules
 
 ---
 
@@ -195,7 +195,7 @@ At any point you can ask:
 ### Adding a new feature (e.g., Redis cache)
 
 ```
-You:   "Add a Redis cache to the api-service"
+You:   "Add a Redis cache to the my-service"
 Agent: Starting /spec update for Redis cache addition...
        [abbreviated interview: cache size, eviction policy, HA needed?]
        Updating infrastructure-spec.yaml...
@@ -207,10 +207,10 @@ Agent: Starting /spec update for Redis cache addition...
 ### Promoting to a new environment
 
 ```
-You:   "Set up staging for api-service"
-Agent: Starting /spec for api-service/staging...
+You:   "Set up staging for my-service"
+Agent: Starting /spec for my-service/staging...
        [shorter interview: reuses workload definition, asks for staging-specific differences]
-       Generates specs/api-service/staging/infrastructure-spec.yaml
+       Generates specs/my-service/staging/infrastructure-spec.yaml
        → /plan → /build (reuse modules, new tfvars) → /test → /review → /ship
 ```
 
