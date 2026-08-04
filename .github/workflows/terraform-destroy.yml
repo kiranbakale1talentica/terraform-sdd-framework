@@ -38,6 +38,7 @@ jobs:
     environment: ${{ github.event.inputs.environment }}
 
     defaults:
+      run:
         # NOTE: Update 'YOUR_SERVICE_NAME' to match your actual service directory
         working-directory: ./terraform/services/YOUR_SERVICE_NAME/${{ github.event.inputs.environment || 'dev' }}/${{ github.event.inputs.environment }}
 
