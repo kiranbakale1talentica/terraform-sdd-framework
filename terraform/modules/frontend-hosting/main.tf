@@ -26,8 +26,28 @@ resource "aws_s3_bucket" "logs" {
   # checkov:skip=CKV_AWS_145: KMS encryption is not required.
   # checkov:skip=CKV_AWS_144: Cross-region replication is unnecessary.
   # checkov:skip=CKV2_AWS_62: Event notifications not required.
+  # tfsec:ignore:aws-s3-enable-bucket-logging
+  # tfsec:ignore:aws-s3-encryption-customer-key
   bucket = "${local.name_prefix}-logs"
   tags   = local.common_tags
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "assets_sse" {
+  bucket = aws_s3_bucket.assets.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "logs_sse" {
+  bucket = aws_s3_bucket.logs.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
 }
 
 resource "aws_s3_bucket_logging" "assets_logging" {
@@ -202,6 +222,8 @@ resource "aws_cloudfront_distribution" "cdn" {
   # checkov:skip=CKV2_AWS_47: WAF is explicitly not required.
   # checkov:skip=CKV_AWS_310: Origin failover not required for simple site.
   # checkov:skip=CKV_AWS_374: Geo restriction not required.
+  # checkov:skip=CKV2_AWS_32: Managed SecurityHeadersPolicy is attached in default_cache_behavior.
+  # tfsec:ignore:aws-cloudfront-enable-waf
   
   enabled             = true
   is_ipv6_enabled     = true
