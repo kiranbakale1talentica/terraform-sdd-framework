@@ -29,7 +29,7 @@ permissions:
 env:
   TF_VERSION: "1.10.3"
   AWS_REGION: "us-west-1"
-  OIDC_ROLE_ARN: "arn:aws:iam::682563173581:role/terraform-sdd-github-actions-role"
+  OIDC_ROLE_ARN: "arn:aws:iam::682563173581:role/terraform-sdd-actions-role"
 
 jobs:
   destroy:
