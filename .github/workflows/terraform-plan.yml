@@ -13,15 +13,6 @@ on:
         required: false
         default: 'docs-portal'
         type: string
-      environment:
-        description: 'Environment'
-        required: false
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - staging
-          - prod
 
 permissions:
   id-token: write      # Required for AWS OIDC
@@ -40,7 +31,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: ./terraform/services/${{ github.event.inputs.service || 'docs-portal' }}/${{ github.event.inputs.environment || 'dev' }}
+        working-directory: ./terraform/services/${{ github.event.inputs.service || 'docs-portal' }}/dev
 
     steps:
       - name: Checkout code

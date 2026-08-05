@@ -10,15 +10,6 @@ on:
         required: false
         default: 'docs-portal'
         type: string
-      environment:
-        description: 'Environment to check for drift'
-        required: false
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - staging
-          - prod
 
 permissions:
   id-token: write # Required for AWS OIDC
@@ -58,12 +49,12 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
 
       - name: Terraform Init
-        working-directory: ./terraform/services/${{ github.event.inputs.service || 'docs-portal' }}/${{ github.event.inputs.environment || 'dev' }}
+        working-directory: ./terraform/services/${{ github.event.inputs.service || 'docs-portal' }}/dev
         run: terraform init
 
       - name: Check Drift
         id: drift
-        working-directory: ./terraform/services/${{ github.event.inputs.service || 'docs-portal' }}/${{ github.event.inputs.environment || 'dev' }}
+        working-directory: ./terraform/services/${{ github.event.inputs.service || 'docs-portal' }}/dev
         run: |
           terraform plan -detailed-exitcode -no-color -out=drift_plan || exit_code=$?
           echo "exit_code=$exit_code" >> $GITHUB_OUTPUT

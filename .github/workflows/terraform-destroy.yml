@@ -8,15 +8,6 @@ on:
         required: true
         default: 'docs-portal'
         type: string
-      environment:
-        description: 'Environment to destroy'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - staging
-          - prod
       confirm_destroy:
         description: 'Type "DESTROY" to confirm'
         required: true
@@ -33,12 +24,12 @@ env:
 
 jobs:
   destroy:
-    name: Destroy ${{ github.event.inputs.service }}/${{ github.event.inputs.environment }}
+    name: Destroy ${{ github.event.inputs.service }}/dev
     runs-on: ubuntu-latest
 
     defaults:
       run:
-        working-directory: ./terraform/services/${{ github.event.inputs.service }}/${{ github.event.inputs.environment }}
+        working-directory: ./terraform/services/${{ github.event.inputs.service }}/dev
 
     steps:
       - name: Verify Confirmation Input
