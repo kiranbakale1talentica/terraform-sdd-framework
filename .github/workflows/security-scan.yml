@@ -26,8 +26,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Checkov Security Scan
-        name: Checkov Security Scan
+      - name: Checkov Security Scan
         uses: bridgecrewio/checkov-action@master
         with:
           directory: terraform/
@@ -36,8 +35,7 @@ jobs:
           output_file_path: console,results.sarif
           soft_fail: true
 
-      - name: Run tfsec Scan
-        name: tfsec Static Security Scan
+      - name: tfsec Static Security Scan
         uses: aquasecurity/tfsec-action@v1.0.3
         with:
           target: terraform/
