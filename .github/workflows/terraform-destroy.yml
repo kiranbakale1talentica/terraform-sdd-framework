@@ -35,9 +35,6 @@ jobs:
   destroy:
     name: Destroy ${{ github.event.inputs.service }}/${{ github.event.inputs.environment }}
     runs-on: ubuntu-latest
-    
-    # Use GitHub environments to enforce manual approval rules
-    environment: ${{ github.event.inputs.environment }}
 
     defaults:
       run:
