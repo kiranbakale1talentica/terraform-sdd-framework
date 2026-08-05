@@ -9,7 +9,10 @@
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringLike": {
-          "token.actions.githubusercontent.com:sub": "repo:kiranbakale1talentica/terraform-sdd-framework:*"
+          "token.actions.githubusercontent.com:sub": [
+            "repo:kiranbakale1talentica/terraform-sdd-framework:*",
+            "repo:kiranbakale1talentica@173769807/terraform-sdd-framework@1321761587:*"
+          ]
         }
       }
     }
