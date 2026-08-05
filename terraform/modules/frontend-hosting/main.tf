@@ -224,7 +224,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   # checkov:skip=CKV_AWS_374: Geo restriction not required.
   # checkov:skip=CKV2_AWS_32: Managed SecurityHeadersPolicy is attached in default_cache_behavior.
   # tfsec:ignore:aws-cloudfront-enable-waf
-  
+
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
