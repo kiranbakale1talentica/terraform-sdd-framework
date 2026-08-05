@@ -98,6 +98,18 @@
       "Resource": ["*"]
     },
     {
+      "Sid": "Route53ReadPermissions",
+      "Effect": "Allow",
+      "Action": [
+        "route53:ListHostedZones",
+        "route53:ListHostedZonesByName",
+        "route53:GetHostedZone",
+        "route53:ListResourceRecordSets",
+        "route53:ChangeResourceRecordSets"
+      ],
+      "Resource": ["*"]
+    },
+    {
       "Sid": "STSGetCallerIdentity",
       "Effect": "Allow",
       "Action": ["sts:GetCallerIdentity"],

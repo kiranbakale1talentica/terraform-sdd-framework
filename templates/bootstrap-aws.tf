@@ -229,6 +229,19 @@ resource "aws_iam_role_policy" "github_actions_permissions" {
         ]
         Resource = ["*"]
       },
+      # ── Route 53: DNS zone lookup & record management ───────────────────
+      {
+        Sid    = "Route53Permissions"
+        Effect = "Allow"
+        Action = [
+          "route53:ListHostedZones",
+          "route53:ListHostedZonesByName",
+          "route53:GetHostedZone",
+          "route53:ListResourceRecordSets",
+          "route53:ChangeResourceRecordSets"
+        ]
+        Resource = ["*"]
+      },
       # ── STS: verify caller identity after assume (used by configure-aws-credentials) ─
       {
         Sid    = "STSGetCallerIdentity"
