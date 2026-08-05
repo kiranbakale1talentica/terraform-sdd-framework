@@ -50,7 +50,7 @@ resource "aws_s3_bucket" "tf_state" {
   tags = {
     Name      = "${var.project_prefix}-tfstate"
     ManagedBy = "bootstrap"
-    Purpose   = "Terraform State Storage & Native S3 Locking"
+    Purpose   = "Terraform State Storage and Native S3 Locking"
   }
 }
 

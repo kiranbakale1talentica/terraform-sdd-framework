@@ -24,7 +24,7 @@ permissions:
 env:
   TF_VERSION: "1.6.0"
   AWS_REGION: "us-east-1"
-  OIDC_ROLE_ARN: "arn:aws:iam::123456789012:role/github-actions-terraform-role"
+  OIDC_ROLE_ARN: "arn:aws:iam::682563173581:role/terraform-sdd-github-actions-role"
 
 jobs:
   apply:
