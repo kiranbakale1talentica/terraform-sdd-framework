@@ -45,3 +45,6 @@ Thumbs.db
 # Crash log files
 crash.log
 crash.*.log
+
+# Reference folders
+VistaXM-Infra/
