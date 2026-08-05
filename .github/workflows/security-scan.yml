@@ -1,0 +1,44 @@
+name: 'Security Scan'
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/**'
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  security-scan:
+    name: 'Security & Quality Scan'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Checkov Security Scan
+        name: Checkov Security Scan
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: terraform/
+          framework: terraform
+          output_format: cli,sarif
+          output_file_path: console,results.sarif
+          soft_fail: true
+
+      - name: Run tfsec Scan
+        name: tfsec Static Security Scan
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          target: terraform/
+          soft_fail: true

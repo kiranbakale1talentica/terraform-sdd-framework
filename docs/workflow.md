@@ -288,54 +288,17 @@ spec-driven-terraform/
 
 ## CI/CD Integration
 
-### Pipeline Design
+### Pipeline Architecture (Tahoor Shah CI/CD Pattern)
 
-The workflow assumes these CI/CD pipelines exist:
+The repository implements a 5-workflow GitHub Actions suite (`.github/workflows/`):
 
-#### PR Pipeline (runs on every Pull Request)
-
-```
-PR opened / updated
-        │
-        ▼
-terraform fmt -check         ← Fails if code not formatted
-        │
-        ▼
-terraform validate           ← Fails if syntax/logic errors
-        │
-        ▼
-tflint                       ← Fails on lint errors
-        │
-        ▼
-checkov / tfsec              ← Fails on HIGH/CRITICAL security findings
-        │
-        ▼
-terraform plan               ← Shows what will change; saved as PR comment
-        │
-        ▼
-infracost comment            ← Cost diff posted to PR
-        │
-        ▼
-Required reviews             ← At least one approval required
-```
-
-#### Apply Pipeline (runs after PR merge to main / on manual trigger)
-
-```
-Merge to main
-        │
-        ▼
-terraform plan               ← Generates final plan
-        │
-        ▼
-Manual approval gate         ← Human reviews plan before apply
-        │
-        ▼
-terraform apply              ← Apply with the approved plan file
-        │
-        ▼
-Post-apply verification      ← Health checks, output validation
-```
+| Workflow | Trigger | Description |
+|---|---|---|
+| **`terraform-plan.yml`** | Pull Requests | Runs `fmt`, `init`, `validate`, `tflint`, and `plan`. Comments plan output directly on PR. |
+| **`security-scan.yml`** | PRs & Main Pushes | Runs `checkov` and `tfsec` security scans across all `.tf` files. |
+| **`terraform-apply.yml`** | Push to `main` / Dispatch | Authenticates via AWS OIDC and applies changes with `-auto-approve`. |
+| **`drift-detection.yml`** | Cron (Mon 9 AM) / Dispatch | Runs `terraform plan -detailed-exitcode` to detect unmanaged cloud changes. |
+| **`terraform-destroy.yml`** | Workflow Dispatch | Safely tears down resources with mandatory `DESTROY` confirmation input. |
 
 ### Workspace Strategy
 

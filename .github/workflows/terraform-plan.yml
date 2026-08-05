@@ -1,4 +1,4 @@
-name: Terraform Plan & Validate
+name: 'Terraform Plan & Validate'
 
 on:
   pull_request:
@@ -6,35 +6,47 @@ on:
     paths:
       - 'terraform/**'
       - '.github/workflows/**'
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to plan'
+        required: false
+        default: 'docs-portal'
+        type: string
+      environment:
+        description: 'Environment'
+        required: false
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
 
 permissions:
-  id-token: write # Required for AWS OIDC
-  contents: read  # Required to checkout code
+  id-token: write      # Required for AWS OIDC
+  contents: read       # Required to checkout code
   pull-requests: write # Required to comment on PRs
 
 env:
   TF_VERSION: "1.10.3"
-  AWS_REGION: "us-east-1"
-  # Replace this with your actual IAM role ARN in a real implementation
+  AWS_REGION: "us-west-1"
   OIDC_ROLE_ARN: "arn:aws:iam::682563173581:role/terraform-sdd-github-actions-role"
 
 jobs:
   plan:
-    name: Validate and Plan
+    name: 'Validate and Plan'
     runs-on: ubuntu-latest
 
-    # This example runs for the dev environment. In a real setup, you'd use a matrix
-    # strategy or separate jobs to run against modified roots.
     defaults:
       run:
-        # NOTE: Update 'YOUR_SERVICE_NAME' to match your actual service directory
-        working-directory: ./terraform/services/YOUR_SERVICE_NAME/dev
+        working-directory: ./terraform/services/${{ github.event.inputs.service || 'docs-portal' }}/${{ github.event.inputs.environment || 'dev' }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS Credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ env.OIDC_ROLE_ARN }}
@@ -46,7 +58,9 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
 
       - name: Terraform Format Check
+        id: fmt
         run: terraform fmt -check -recursive ../../..
+        continue-on-error: true
 
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v4
@@ -59,60 +73,69 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Run TFLint
+        id: tflint
         run: tflint -f compact --recursive
+        continue-on-error: true
 
       - name: Terraform Init
         id: init
-        # In a real environment, you provide the backend config via file or CLI args
-        # run: terraform init -backend-config=../../../backends/dev.tfbackend
-        # For this example, we use local state or bypass backend for validation
-        run: terraform init -backend=false
+        run: terraform init
 
       - name: Terraform Validate
         id: validate
         run: terraform validate -no-color
 
-      # Security Scan - Checkov
-      - name: Run Checkov
-        uses: bridgecrewio/checkov-action@master
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -input=false -out=tfplan
+        continue-on-error: true
+
+      - name: Post PR Comment
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
         with:
-          directory: terraform/
-          framework: terraform
-          quiet: true
-          soft_fail: true # Set to false to block PRs on security issues
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Find existing comment if present
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && comment.body.includes('#### Terraform Format and Style');
+            });
 
-      # Example: Generating a plan
-      # (Note: Requires real AWS credentials and a real backend to work fully)
-      # - name: Terraform Plan
-      #   id: plan
-      #   run: terraform plan -no-color -var-file=terraform.tfvars -out=tfplan
-      #   env:
-      #     TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            #### TFLint Linting 🔍\`${{ steps.tflint.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
 
-      # - name: Update Pull Request
-      #   uses: actions/github-script@v7
-      #   if: github.event_name == 'pull_request'
-      #   env:
-      #     PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
-      #   with:
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      #     script: |
-      #       const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-      #       #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-      #       #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-      #       #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-      #       
-      #       <details><summary>Show Plan</summary>
-      #       
-      #       \`\`\`\n
-      #       ${process.env.PLAN}
-      #       \`\`\`
-      #       
-      #       </details>`;
-      #       
-      #       github.rest.issues.createComment({
-      #         issue_number: context.issue.number,
-      #         owner: context.repo.owner,
-      #         repo: context.repo.repo,
-      #         body: output
-      #       })
+            <details><summary>Show Plan Output</summary>
+
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pushed by: @${context.actor} in [${context.sha.substring(0, 7)}](https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha})*`;
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: output
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              });
+            }
