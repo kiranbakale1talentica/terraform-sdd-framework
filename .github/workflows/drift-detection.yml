@@ -34,36 +34,15 @@ jobs:
     name: 'Detect Configuration Drift'
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ./terraform/services/${{ github.event.inputs.service || 'docs-portal' }}/${{ github.event.inputs.environment || 'dev' }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Debug - GitHub Context
+      - name: Debug - Print GitHub Repository & Event Context
         run: |
-          echo "Repository : ${{ github.repository }}"
-          echo "Ref        : ${{ github.ref }}"
-          echo "Actor      : ${{ github.actor }}"
-          echo "Workflow   : ${{ github.workflow }}"
-          echo "Event      : ${{ github.event_name }}"
-
-      - name: Debug - OIDC Token Sub Claim
-        id: debug_token
-        run: |
-          TOKEN=$(curl -sLS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" \
-            -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" | jq -r '.value')
-          PAYLOAD=$(echo "$TOKEN" | cut -d. -f2 | base64 -d 2>/dev/null || echo "$TOKEN" | cut -d. -f2 | base64 --decode 2>/dev/null)
-          echo "=== Full OIDC Claims ==="
-          echo "$PAYLOAD" | python3 -m json.tool 2>/dev/null || echo "$PAYLOAD"
-          echo ""
-          echo "sub  : $(echo "$PAYLOAD" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('sub','NOT FOUND'))" 2>/dev/null)"
-          echo "aud  : $(echo "$PAYLOAD" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('aud','NOT FOUND'))" 2>/dev/null)"
-          echo "iss  : $(echo "$PAYLOAD" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('iss','NOT FOUND'))" 2>/dev/null)"
-          echo "========================"
-          echo "Trust policy expects sub LIKE: repo:kiranbakale1talentica/terraform-sdd-framework:*"
+          echo "Repository: ${{ github.repository }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Event Name: ${{ github.event_name }}"
 
       - name: Configure AWS Credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
@@ -78,10 +57,12 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
 
       - name: Terraform Init
+        working-directory: ./terraform/services/${{ github.event.inputs.service || 'docs-portal' }}/${{ github.event.inputs.environment || 'dev' }}
         run: terraform init
 
       - name: Check Drift
         id: drift
+        working-directory: ./terraform/services/${{ github.event.inputs.service || 'docs-portal' }}/${{ github.event.inputs.environment || 'dev' }}
         run: |
           terraform plan -detailed-exitcode -no-color -out=drift_plan || exit_code=$?
           echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
