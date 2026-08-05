@@ -186,11 +186,11 @@ backends/[env].tfbackend
 Contents (example for AWS S3):
 
 ```ini
-bucket         = "[project]-terraform-state-[account-id]"
-key            = "services/[service]/[env]/terraform.tfstate"
-region         = "[region]"
-encrypt        = true
-dynamodb_table = "[project]-terraform-state-lock"
+bucket       = "[project]-terraform-state-[account-id]"
+key          = "services/[service]/[env]/terraform.tfstate"
+region       = "[region]"
+encrypt      = true
+use_lockfile = true # Native S3 state locking (Terraform v1.10+)
 ```
 
 ---

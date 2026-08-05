@@ -1,0 +1,6 @@
+aws_region  = "us-east-1"
+project     = "docs-portal"
+environment = "dev"
+domain_name = "kiranbakale.online"
+owner       = "devops team"
+cost_center = "unknown"

@@ -76,12 +76,12 @@ Show: external consumers, other internal services, cloud services.
 
 ```mermaid
 graph TB
-    User([External User]) -->|HTTPS| LB[Load Balancer]
-    LB --> App[Application Service]
-    App --> DB[(Database)]
-    App --> Cache[(Cache)]
-    App --> Queue([Message Queue])
-    Queue --> Worker[Worker Service]
+    User(["External User"]) -->|HTTPS| LB["Load Balancer"]
+    LB --> App["Application Service"]
+    App --> DB[("Database")]
+    App --> Cache[("Cache")]
+    App --> Queue(["Message Queue"])
+    Queue --> Worker["Worker Service"]
 
     style LB fill:#f0f4ff
     style App fill:#f0f4ff
@@ -152,9 +152,9 @@ VPC: 10.x.0.0/16
 sequenceDiagram
     participant Internet
     participant WAF
-    participant ALB as Load Balancer
-    participant App as App (Private Subnet)
-    participant DB as Database (Data Subnet)
+    participant ALB as "Load Balancer"
+    participant App as "App (Private Subnet)"
+    participant DB as "Database (Data Subnet)"
 
     Internet->>WAF: HTTPS Request
     WAF->>ALB: Filtered Request
@@ -215,10 +215,10 @@ Health check: GET /health — 200 OK
 
 ```mermaid
 graph LR
-    API --> DB[(Primary DB)]
-    API --> Cache[(Redis Cache)]
-    DB --> Replica[(Read Replica)]
-    DB --> Backup[(Automated Backup)]
+    API --> DB[("Primary DB")]
+    API --> Cache[("Redis Cache")]
+    DB --> Replica[("Read Replica")]
+    DB --> Backup[("Automated Backup")]
 ```
 
 ---
@@ -308,11 +308,11 @@ Log streams:
 
 ```mermaid
 graph BT
-    networking[modules/networking]
-    iam[modules/iam]
-    compute[modules/compute]
-    database[modules/database]
-    monitoring[modules/monitoring]
+    networking["modules/networking"]
+    iam["modules/iam"]
+    compute["modules/compute"]
+    database["modules/database"]
+    monitoring["modules/monitoring"]
 
     iam --> compute
     networking --> compute
@@ -336,14 +336,14 @@ graph BT
 graph TB
     subgraph prod["Production (us-east-1)"]
         subgraph az1["AZ-1"]
-            app1[App Instance]
-            db1[(DB Primary)]
+            app1["App Instance"]
+            db1[("DB Primary")]
         end
         subgraph az2["AZ-2"]
-            app2[App Instance]
-            db2[(DB Standby)]
+            app2["App Instance"]
+            db2[("DB Standby")]
         end
-        alb[Load Balancer]
+        alb["Load Balancer"]
     end
 
     alb --> app1

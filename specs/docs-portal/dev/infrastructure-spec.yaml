@@ -1,0 +1,141 @@
+metadata:
+  service_name: "docs-portal"
+  display_name: "Documentation Portal"
+  description: "Static website hosting for the docs portal (hello world page)"
+  owner: "devops team"
+  cost_center: "unknown"
+  spec_version: "1.0"
+  status: approved
+  created_date: "2026-08-04"
+  approved_date: "2026-08-04"
+  approved_by: "kiranb"
+
+environments:
+  target:
+    - dev
+  isolation: per_environment
+  promotion_strategy: "manual"
+
+cloud:
+  provider: "aws"
+  regions:
+    primary: "us-east-1"
+    dr: null
+
+workload:
+  type: "frontend-hosting"
+  runtime: "static-html"
+  language: "html"
+  framework: "none"
+  expected_peak_instances: null
+  expected_rps: null
+  latency_sla_ms: null
+  stateful: false
+
+networking:
+  public_internet_access: true
+  public_access_method: cdn
+  vpc_required: false
+  vpc_cidr: null
+  subnet_strategy: ""
+  cross_service_communication:
+    method: direct
+    services: []
+  dns:
+    custom_domain: "kiranbakale.online"
+    private_dns: false
+  cdn_required: true
+  vpn_required: false
+  waf_required: false
+  ddos_protection: basic
+
+compute:
+  instance_type: null
+  instance_count_min: 1
+  instance_count_max: 1
+  auto_scaling: false
+  auto_scaling_triggers: []
+  spot_acceptable: false
+
+security:
+  compliance_frameworks: []
+  data_classification: public
+  iam:
+    identity_model: "iam-roles"
+    cross_account_access: false
+    mfa_required: false
+  secrets_management:
+    provider: ""
+    secret_paths: []
+  encryption:
+    at_rest: true
+    at_rest_key_type: provider-managed
+    in_transit: true
+    tls_version_minimum: "1.2"
+  network_policy: default-deny
+  vulnerability_scanning: false
+  audit_logging: true
+
+availability:
+  sla_target_percent: 99.9
+  multi_az: true
+  multi_region: false
+  ha_model: null
+  zero_downtime_deployments: true
+
+disaster_recovery:
+  rto_hours: null
+  rpo_hours: null
+  backup_frequency: daily
+  backup_retention_days: 7
+  cross_region_backup: false
+  dr_runbook_required: false
+
+data_stores:
+  - type: "object-storage"
+    engine: "s3"
+    size: null
+    storage_gb: null
+    multi_az: true
+    read_replicas: 0
+    backup_enabled: false
+    backup_retention_days: null
+  - type: "object-storage"
+    engine: "s3-logging"
+    size: null
+    storage_gb: null
+    multi_az: true
+    read_replicas: 0
+    backup_enabled: false
+    backup_retention_days: null
+
+observability:
+  metrics:
+    enabled: true
+    platform: "cloudwatch"
+  logging:
+    enabled: true
+    platform: "cloudfront-standard-logging"
+    retention_days: 30
+  tracing:
+    enabled: false
+    platform: null
+  alerting:
+    enabled: false
+    channels: []
+    alert_on: []
+  dashboards:
+    required: false
+    platform: null
+
+cost:
+  monthly_budget_usd: null
+  cost_anomaly_alerts: false
+  reserved_instances: false
+  cost_optimization_notes: "Keep costs low by using standard S3 and CloudFront with no WAF."
+
+open_questions: []
+decisions:
+  - decision: "Use S3 and CloudFront with OAC for static hosting"
+    adr_file: "specs/docs-portal/dev/decisions/ADR-001-frontend-hosting.md"
+    date: "2026-08-04"
