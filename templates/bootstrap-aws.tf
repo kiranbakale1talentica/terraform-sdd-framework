@@ -129,18 +129,112 @@ resource "aws_iam_role_policy" "github_actions_permissions" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
+      # ── Remote state: read/write S3 state bucket ─────────────────────────
       {
+        Sid    = "TerraformStateBucket"
         Effect = "Allow"
         Action = [
           "s3:GetObject",
           "s3:PutObject",
           "s3:DeleteObject",
-          "s3:ListBucket"
+          "s3:ListBucket",
+          "s3:GetBucketVersioning",
+          "s3:GetBucketLocation"
         ]
         Resource = [
           aws_s3_bucket.tf_state.arn,
           "${aws_s3_bucket.tf_state.arn}/*"
         ]
+      },
+      # ── S3: provision docs-portal assets & log buckets ───────────────────
+      {
+        Sid    = "S3BucketProvisioning"
+        Effect = "Allow"
+        Action = [
+          "s3:CreateBucket",
+          "s3:DeleteBucket",
+          "s3:GetBucketAcl",
+          "s3:PutBucketAcl",
+          "s3:GetBucketCORS",
+          "s3:PutBucketCORS",
+          "s3:GetBucketLogging",
+          "s3:PutBucketLogging",
+          "s3:GetBucketPolicy",
+          "s3:PutBucketPolicy",
+          "s3:DeleteBucketPolicy",
+          "s3:GetBucketPublicAccessBlock",
+          "s3:PutBucketPublicAccessBlock",
+          "s3:GetBucketVersioning",
+          "s3:PutBucketVersioning",
+          "s3:GetBucketWebsite",
+          "s3:PutBucketWebsite",
+          "s3:DeleteBucketWebsite",
+          "s3:GetEncryptionConfiguration",
+          "s3:PutEncryptionConfiguration",
+          "s3:GetLifecycleConfiguration",
+          "s3:PutLifecycleConfiguration",
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket",
+          "s3:GetBucketLocation",
+          "s3:GetBucketTagging",
+          "s3:PutBucketTagging"
+        ]
+        Resource = ["*"]
+      },
+      # ── CloudFront: provision CDN distribution ────────────────────────────
+      {
+        Sid    = "CloudFrontProvisioning"
+        Effect = "Allow"
+        Action = [
+          "cloudfront:CreateDistribution",
+          "cloudfront:UpdateDistribution",
+          "cloudfront:DeleteDistribution",
+          "cloudfront:GetDistribution",
+          "cloudfront:GetDistributionConfig",
+          "cloudfront:ListDistributions",
+          "cloudfront:CreateOriginAccessControl",
+          "cloudfront:UpdateOriginAccessControl",
+          "cloudfront:DeleteOriginAccessControl",
+          "cloudfront:GetOriginAccessControl",
+          "cloudfront:GetOriginAccessControlConfig",
+          "cloudfront:ListOriginAccessControls",
+          "cloudfront:CreateCloudFrontOriginAccessIdentity",
+          "cloudfront:UpdateCloudFrontOriginAccessIdentity",
+          "cloudfront:DeleteCloudFrontOriginAccessIdentity",
+          "cloudfront:GetCloudFrontOriginAccessIdentity",
+          "cloudfront:GetCloudFrontOriginAccessIdentityConfig",
+          "cloudfront:TagResource",
+          "cloudfront:UntagResource",
+          "cloudfront:ListTagsForResource",
+          "cloudfront:CreateInvalidation",
+          "cloudfront:GetInvalidation",
+          "cloudfront:ListInvalidations"
+        ]
+        Resource = ["*"]
+      },
+      # ── ACM: provision TLS certificates ──────────────────────────────────
+      {
+        Sid    = "ACMProvisioning"
+        Effect = "Allow"
+        Action = [
+          "acm:RequestCertificate",
+          "acm:DescribeCertificate",
+          "acm:DeleteCertificate",
+          "acm:ListCertificates",
+          "acm:AddTagsToCertificate",
+          "acm:ListTagsForCertificate",
+          "acm:GetCertificate"
+        ]
+        Resource = ["*"]
+      },
+      # ── STS: verify caller identity after assume (used by configure-aws-credentials) ─
+      {
+        Sid    = "STSGetCallerIdentity"
+        Effect = "Allow"
+        Action = ["sts:GetCallerIdentity"]
+        Resource = ["*"]
       }
     ]
   })
