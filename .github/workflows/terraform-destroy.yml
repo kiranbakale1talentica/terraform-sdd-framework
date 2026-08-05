@@ -60,6 +60,7 @@ jobs:
           role-to-assume: ${{ env.OIDC_ROLE_ARN }}
           role-session-name: GitHubActionsSession
           aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
