@@ -37,6 +37,12 @@ jobs:
           output_file_path: console,results.sarif
           soft_fail: true
 
+      - name: tfsec Static Security Scan
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          target: terraform/
+          soft_fail: true
+
       - name: Upload SARIF report to GitHub Security Tab
         uses: github/codeql-action/upload-sarif@v3
         if: always()
