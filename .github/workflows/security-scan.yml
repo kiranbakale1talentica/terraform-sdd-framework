@@ -16,10 +16,11 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  security-events: write
 
 jobs:
   security-scan:
-    name: 'Security & Quality Scan'
+    name: 'Security & Compliance Scan (Checkov)'
     runs-on: ubuntu-latest
 
     steps:
@@ -27,6 +28,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Checkov Security Scan
+        id: checkov
         uses: bridgecrewio/checkov-action@master
         with:
           directory: terraform/
@@ -35,8 +37,70 @@ jobs:
           output_file_path: console,results.sarif
           soft_fail: true
 
-      - name: tfsec Static Security Scan
-        uses: aquasecurity/tfsec-action@v1.0.3
+      - name: Upload SARIF report to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
         with:
-          target: terraform/
-          soft_fail: true
+          sarif_file: results.sarif
+          category: checkov
+
+      - name: Post PR Security Summary Comment
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request' && always()
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            let summary = '### 🛡️ Checkov Security Scan Results\n\n';
+            try {
+              if (fs.existsSync('results.sarif')) {
+                const sarif = JSON.parse(fs.readFileSync('results.sarif', 'utf8'));
+                const runs = sarif.runs || [];
+                let total = 0;
+                let resultsText = '';
+                runs.forEach(run => {
+                  (run.results || []).forEach(res => {
+                    total++;
+                    const ruleId = res.ruleId || 'N/A';
+                    const msg = res.message ? res.message.text : '';
+                    const location = res.locations && res.locations[0] && res.locations[0].physicalLocation
+                      ? res.locations[0].physicalLocation.artifactLocation.uri
+                      : 'N/A';
+                    resultsText += `| \`${ruleId}\` | ${location} | ${msg} |\n`;
+                  });
+                });
+
+                if (total === 0) {
+                  summary += '✅ **0 Security Findings!** All static security checks passed.\n';
+                } else {
+                  summary += `⚠️ **Found ${total} security issue(s):**\n\n| Rule ID | File | Description |\n|---|---|---|\n${resultsText}`;
+                }
+              } else {
+                summary += '⚠️ SARIF report file not found.';
+              }
+            } catch (err) {
+              summary += `⚠️ Error parsing security report: ${err.message}`;
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const botComment = comments.find(comment => comment.user.type === 'Bot' && comment.body.includes('Checkov Security Scan Results'));
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: summary
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: summary
+              });
+            }
