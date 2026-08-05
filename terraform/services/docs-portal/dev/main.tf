@@ -7,3 +7,4 @@ module "frontend_hosting" {
   owner       = var.owner
   cost_center = var.cost_center
 }
+# Testing Terraform Plan PR Automation
