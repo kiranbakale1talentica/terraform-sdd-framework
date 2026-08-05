@@ -173,6 +173,13 @@ resource "aws_iam_role_policy" "github_actions_permissions" {
           "s3:PutEncryptionConfiguration",
           "s3:GetLifecycleConfiguration",
           "s3:PutLifecycleConfiguration",
+          "s3:GetAccelerateConfiguration",
+          "s3:PutAccelerateConfiguration",
+          "s3:GetBucketRequestPayment",
+          "s3:PutBucketRequestPayment",
+          "s3:GetReplicationConfiguration",
+          "s3:PutReplicationConfiguration",
+          "s3:GetBucketObjectLockConfiguration",
           "s3:GetObject",
           "s3:PutObject",
           "s3:DeleteObject",
@@ -240,7 +247,8 @@ resource "aws_iam_role_policy" "github_actions_permissions" {
           "route53:ListResourceRecordSets",
           "route53:ChangeResourceRecordSets",
           "route53:ListTagsForResource",
-          "route53:ListTagsForResources"
+          "route53:ListTagsForResources",
+          "route53:GetChange"
         ]
         Resource = ["*"]
       },
