@@ -39,8 +39,7 @@ variable "github_org_repo" {
 
 variable "github_oidc_sub_claim" {
   type        = string
-  default     = ""
-  description = "Optional custom OIDC subject claim prefix copied from GitHub Repo Settings > Actions > General > OpenID Connect subject claim (e.g. repo:org@id/repo@id)"
+  description = "Required OIDC subject claim prefix copied from GitHub Repo Settings > Actions > General > OpenID Connect subject claim (e.g. repo:org@id/repo@id)"
 }
 
 # ─── 1. S3 Bucket for Terraform Remote State & Native Locking ────────────────
@@ -110,10 +109,10 @@ resource "aws_iam_role" "github_actions" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringLike = {
-            "token.actions.githubusercontent.com:sub" = compact([
+            "token.actions.githubusercontent.com:sub" = [
               "repo:${var.github_org_repo}:*",
-              var.github_oidc_sub_claim != "" ? "${var.github_oidc_sub_claim}:*" : ""
-            ])
+              "${var.github_oidc_sub_claim}:*"
+            ]
           }
         }
       }

@@ -59,12 +59,12 @@ When `/bootstrap` is triggered or when starting in a new AWS account:
    - *"We are creating a **GitHub Actions OIDC IAM Role** so GitHub Actions CI/CD pipelines can authenticate to AWS keylessly (without long-lived secret keys) to provision resources on your behalf."*
 
 3. **Step 3: Confirm Resource Names & Parameters:**
-   Confirm the target resource names and OIDC claims with the user before applying:
+   Confirm the target resource names and MANDATORY OIDC claims with the user before applying:
    - **S3 State Bucket Name:** `terraform-sdd-tfstate-<aws-account-id>`
    - **GitHub Actions IAM Role Name:** `<project-prefix>-actions-role` (e.g. `terraform-sdd-actions-role`)
    - **GitHub Repository Identifier:** `<github-org>/<github-repo>`
-   - **OIDC Subject Claim Prefix:** Prompt the user:
-     > *"Please go to **GitHub Repo Settings > Actions > General > OpenID Connect subject claim**, copy your repository's custom subject claim template string (e.g. `repo:org@id/repo@id`), and provide it here if custom claims are enabled."*
+   - **REQUIRED OIDC Subject Claim Prefix:** Prompt the user:
+     > *"Please go to **GitHub Repo Settings > Actions > General > OpenID Connect subject claim**, copy your repository's exact custom subject claim template string (e.g. `repo:org@id/repo@id`), and provide it here. This parameter is REQUIRED."*
 
 4. **Step 4: Execute Bootstrap & Output Secret:**
    Execute `templates/bootstrap-aws.tf` passing `-var="github_org_repo=..."` and `-var="github_oidc_sub_claim=..."` using the user's confirmed AWS profile.
