@@ -18,6 +18,30 @@ Its sole purpose is:
 
 ---
 
+## Skill Routing & Override Rules
+
+In this workspace, the following skill routing rules take precedence over any global plugin defaults:
+
+### Primary Workflow Driver
+- `/spec`, `/plan`, `/build`, `/test`, `/review`, `/ship` → **ALWAYS invoke `terraform-sdd` FIRST**, NOT generic application `spec-driven-development`.
+
+### Permitted Helper Skills (Infrastructure Utility Only)
+- `documentation-and-adrs`: Use ONLY for writing Infrastructure ADRs in `specs/<service>/<env>/decisions/`.
+- `code-review-and-quality`: Use ONLY for auditing Terraform HCL style, module boundaries, and naming.
+- `git-workflow-and-versioning`: Use for semantic tagging of capability modules and repository releases.
+- `ci-cd-and-automation`: Use ONLY for optimizing `.github/workflows/` IaC pipelines.
+
+### Globally Ignored Application Skills (Disabled in This Workspace)
+- `frontend-ui-engineering` ❌
+- `api-and-interface-design` ❌
+- `spec-driven-development` ❌ (Replaced by `terraform-sdd`)
+- `test-driven-development` ❌ (Replaced by `terraform-test`)
+- `browser-testing-with-devtools` ❌
+- `observability-and-instrumentation` ❌
+- `performance-optimization` ❌
+
+---
+
 ## Boundaries
 
 ### Always Do

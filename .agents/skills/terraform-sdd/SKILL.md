@@ -1,10 +1,10 @@
 ---
 name: terraform-sdd
 description: >
-  Terraform Specification Driven Development. Use when designing, planning, generating,
-  validating, or deploying cloud infrastructure with Terraform. Triggers on phrases like
-  "create infrastructure", "provision", "terraform", "deploy to cloud", "infrastructure spec",
-  "/spec", "/plan", "/build", "/test", "/review", "/ship". Do NOT use for application code generation.
+  MANDATORY driver for all cloud infrastructure work in this repository.
+  Triggers on /spec, /plan, /build, /test, /review, /ship, /tf-spec, /tf-build,
+  "create infrastructure", "provision", "terraform", "deploy to cloud", "infrastructure spec".
+  Overrides generic application spec-driven-development.
 ---
 
 # Terraform Specification Driven Development (SDD)
