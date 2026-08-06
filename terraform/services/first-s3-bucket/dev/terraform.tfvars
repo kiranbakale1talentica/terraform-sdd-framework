@@ -1,0 +1,9 @@
+aws_region                         = "ap-south-1"
+project_prefix                     = "terraform-sdd"
+environment                        = "dev"
+service_name                       = "first-s3-bucket"
+bucket_name_suffix                 = "first-storage"
+owner                              = "DevOps"
+cost_center                        = "DevOps-101"
+enable_versioning                  = true
+noncurrent_version_transition_days = 30
