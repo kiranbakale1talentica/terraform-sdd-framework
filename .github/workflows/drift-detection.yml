@@ -8,7 +8,7 @@ on:
       service:
         description: 'Service to check for drift'
         required: false
-        default: 'docs-portal'
+        default: 'first-s3-bucket'
         type: string
 
 permissions:
@@ -17,7 +17,7 @@ permissions:
 
 env:
   TF_VERSION: "1.10.3"
-  AWS_REGION: "us-west-1"
+  AWS_REGION: "ap-south-1"
   OIDC_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
 jobs:
@@ -67,7 +67,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ steps.dir.outputs.working_dir }}
-        run: terraform init
+        run: terraform init -input=false
 
       - name: Check Drift
         id: drift

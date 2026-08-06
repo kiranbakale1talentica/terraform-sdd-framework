@@ -1,0 +1,136 @@
+# Infrastructure Specification — First S3 Bucket (dev)
+metadata:
+  service_name: "first-s3-bucket"
+  display_name: "First Production-Grade S3 Bucket"
+  description: "Secure, versioned, and encrypted S3 bucket for file and asset storage following AWS IaC security best practices."
+  owner: "DevOps Team"
+  cost_center: "DevOps-101"
+  spec_version: "1.0"
+  status: approved
+  created_date: "2026-08-06"
+  approved_date: "2026-08-06"
+  approved_by: "DevOps Lead"
+
+environments:
+  target:
+    - dev
+  isolation: per_environment
+  promotion_strategy: "Feature branch to main with automated tfsec/checkov security scanning"
+
+cloud:
+  provider: aws
+  regions:
+    primary: "ap-south-1"
+    dr: null
+  accounts:
+    dev: "682563173581"
+
+workload:
+  type: "object-storage"
+  runtime: null
+  language: null
+  framework: null
+  expected_peak_instances: null
+  expected_rps: 100
+  latency_sla_ms: 50
+  stateful: true
+
+networking:
+  public_internet_access: false
+  public_access_method: null
+  vpc_required: false
+  subnet_strategy: null
+  cross_service_communication:
+    method: "direct"
+    services: []
+  dns:
+    custom_domain: null
+    private_dns: false
+  cdn_required: false
+  vpn_required: false
+  waf_required: false
+  ddos_protection: basic
+
+compute:
+  instance_type: null
+  instance_count_min: 0
+  instance_count_max: 0
+  auto_scaling: false
+  auto_scaling_triggers: []
+  spot_acceptable: false
+
+security:
+  compliance_frameworks: ["soc2"]
+  data_classification: internal
+  iam:
+    identity_model: iam-roles
+    cross_account_access: false
+    mfa_required: false
+  secrets_management:
+    provider: aws-secrets-manager
+    secret_paths: []
+  encryption:
+    at_rest: true
+    at_rest_key_type: provider-managed
+    in_transit: true
+    tls_version_minimum: "1.2"
+  network_policy: default-deny
+  vulnerability_scanning: true
+  audit_logging: true
+
+availability:
+  sla_target_percent: 99.99
+  multi_az: true
+  multi_region: false
+  ha_model: active-active
+  zero_downtime_deployments: true
+
+disaster_recovery:
+  rto_hours: 1
+  rpo_hours: 1
+  backup_frequency: daily
+  backup_retention_days: 30
+  cross_region_backup: false
+  dr_runbook_required: false
+
+data_stores:
+  - type: object-storage
+    engine: s3
+    size: null
+    storage_gb: 100
+    multi_az: true
+    read_replicas: 0
+    backup_enabled: true
+    backup_retention_days: 30
+
+observability:
+  metrics:
+    enabled: true
+    platform: cloudwatch
+  logging:
+    enabled: true
+    platform: cloudwatch-logs
+    retention_days: 30
+  tracing:
+    enabled: false
+    platform: null
+  alerting:
+    enabled: true
+    channels: ["email"]
+    alert_on: ["high-error-rate", "cost-anomaly"]
+  dashboards:
+    required: false
+    platform: null
+
+cost:
+  monthly_budget_usd: 10
+  cost_anomaly_alerts: true
+  reserved_instances: false
+  cost_optimization_notes: "S3 Standard storage with lifecycle rule to transition old object versions to Standard-IA after 30 days."
+
+open_questions: []
+
+decisions:
+  - decision: "Use S3 Native Versioning, SSE-S3 Encryption, and Public Access Block by Default"
+    adr_file: "specs/first-s3-bucket/dev/decisions/ADR-001-s3-bucket-security-and-lifecycle.md"
+    date: "2026-08-06"

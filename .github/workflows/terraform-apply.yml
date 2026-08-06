@@ -10,7 +10,7 @@ on:
       service:
         description: 'Service to deploy'
         required: false
-        default: 'docs-portal'
+        default: 'first-s3-bucket'
         type: string
 
 permissions:
@@ -19,12 +19,12 @@ permissions:
 
 env:
   TF_VERSION: "1.10.3"
-  AWS_REGION: "us-west-1"
+  AWS_REGION: "ap-south-1"
   OIDC_ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
 
 jobs:
   apply:
-    name: Apply docs-portal dev
+    name: Apply first-s3-bucket dev
     runs-on: ubuntu-latest
 
     steps:
@@ -70,7 +70,7 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -input=false
         working-directory: ${{ steps.dir.outputs.working_dir }}
 
       - name: Terraform Apply
