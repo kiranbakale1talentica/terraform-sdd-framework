@@ -89,11 +89,13 @@ jobs:
       - name: Generate Execution Summary
         if: always()
         run: |
-          echo "### Pipeline Execution Summary: Drift Detection (Weekly Audit)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Check / Step | Status | Target Directory |" >> $GITHUB_STEP_SUMMARY
-          echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
-          echo "| Target Directory Discovery | ${{ steps.dir.outcome }} | \`${{ steps.dir.outputs.working_dir }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| AWS OIDC Authentication | success | \`arn:aws:iam::...\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Terraform Initialization | ${{ steps.init.outcome }} | \`${{ steps.dir.outputs.working_dir }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Configuration Drift Check | ${{ steps.drift.outcome }} | \`${{ steps.dir.outputs.working_dir }}\` |" >> $GITHUB_STEP_SUMMARY
+          cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          ### Pipeline Execution Summary: Drift Detection (Weekly Audit)
+
+          | Check / Step | Status | Target Directory |
+          | :--- | :--- | :--- |
+          | Target Directory Discovery | ${{ steps.dir.outcome }} | `${{ steps.dir.outputs.working_dir }}` |
+          | AWS OIDC Authentication | success | `arn:aws:iam::...` |
+          | Terraform Initialization | ${{ steps.init.outcome }} | `${{ steps.dir.outputs.working_dir }}` |
+          | Configuration Drift Check | ${{ steps.drift.outcome }} | `${{ steps.dir.outputs.working_dir }}` |
+          EOF

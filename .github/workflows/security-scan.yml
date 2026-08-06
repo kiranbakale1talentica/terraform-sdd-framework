@@ -33,9 +33,11 @@ jobs:
       - name: Generate Execution Summary
         if: always()
         run: |
-          echo "### Pipeline Execution Summary: Security Scan" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Check / Step | Status | Scope |" >> $GITHUB_STEP_SUMMARY
-          echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
-          echo "| Code Checkout | success | \`terraform/\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Checkov Static Security Analysis | ${{ steps.checkov.outcome }} | CIS AWS Benchmarks |" >> $GITHUB_STEP_SUMMARY
+          cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          ### Pipeline Execution Summary: Security Scan
+
+          | Check / Step | Status | Scope |
+          | :--- | :--- | :--- |
+          | Code Checkout | success | `terraform/` |
+          | Checkov Static Security Analysis | ${{ steps.checkov.outcome }} | CIS AWS Benchmarks |
+          EOF
