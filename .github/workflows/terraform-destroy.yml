@@ -28,10 +28,6 @@ jobs:
     name: Destroy ${{ github.event.inputs.service }}/dev
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ./terraform/services/${{ github.event.inputs.service }}/dev
-
     steps:
       - name: Verify Confirmation Input
         run: |
@@ -42,6 +38,16 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Discover Service Working Directory
+        id: dir
+        run: |
+          TARGET_DIR="terraform/services/${{ github.event.inputs.service }}/dev"
+          if [ ! -d "$TARGET_DIR" ]; then
+            echo "Directory $TARGET_DIR does not exist in repo."
+            exit 1
+          fi
+          echo "working_dir=$TARGET_DIR" >> $GITHUB_OUTPUT
 
       - name: Configure AWS Credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v5
@@ -58,6 +64,8 @@ jobs:
 
       - name: Terraform Init
         run: terraform init -input=false
+        working-directory: ${{ steps.dir.outputs.working_dir }}
 
       - name: Terraform Destroy
         run: terraform destroy -auto-approve -input=false
+        working-directory: ${{ steps.dir.outputs.working_dir }}
