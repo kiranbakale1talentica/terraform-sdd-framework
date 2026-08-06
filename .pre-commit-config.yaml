@@ -29,7 +29,7 @@ repos:
 
   # ── Secret & Credential Detection ────────────────────────────────────────────
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.22.1
+    rev: v8.24.0
     hooks:
       - id: gitleaks
         name: Gitleaks — Detect Secrets
