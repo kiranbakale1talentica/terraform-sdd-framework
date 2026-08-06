@@ -240,6 +240,25 @@ resource "aws_iam_role_policy" "github_actions_permissions" {
         ]
         Resource = ["*"]
       },
+      # ── DynamoDB: provision tables & indexes ──────────────────────────────
+      {
+        Sid    = "DynamoDBProvisioning"
+        Effect = "Allow"
+        Action = [
+          "dynamodb:CreateTable",
+          "dynamodb:DeleteTable",
+          "dynamodb:DescribeTable",
+          "dynamodb:UpdateTable",
+          "dynamodb:DescribeContinuousBackups",
+          "dynamodb:UpdateContinuousBackups",
+          "dynamodb:DescribeTimeToLive",
+          "dynamodb:UpdateTimeToLive",
+          "dynamodb:ListTagsOfResource",
+          "dynamodb:TagResource",
+          "dynamodb:UntagResource"
+        ]
+        Resource = ["*"]
+      },
       # ── Route 53: DNS zone lookup & record management ───────────────────
       {
         Sid    = "Route53Permissions"
