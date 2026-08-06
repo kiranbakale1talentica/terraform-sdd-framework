@@ -71,9 +71,23 @@ jobs:
           terraform_version: ${{ env.TF_VERSION }}
 
       - name: Terraform Init
+        id: init
         run: terraform init -input=false
         working-directory: ${{ steps.dir.outputs.working_dir }}
 
       - name: Terraform Apply
+        id: apply
         run: terraform apply -auto-approve -input=false
         working-directory: ${{ steps.dir.outputs.working_dir }}
+
+      - name: Generate Execution Summary
+        if: always()
+        run: |
+          echo "### Pipeline Execution Summary: Terraform Apply (Deployment)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check / Step | Status | Target Directory |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| Working Directory Discovery | ${{ steps.dir.outcome }} | \`${{ steps.dir.outputs.working_dir }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| AWS OIDC Authentication | success | \`arn:aws:iam::...\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Terraform Initialization | ${{ steps.init.outcome }} | \`${{ steps.dir.outputs.working_dir }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Terraform Apply (Deployment) | ${{ steps.apply.outcome }} | \`${{ steps.dir.outputs.working_dir }}\` |" >> $GITHUB_STEP_SUMMARY

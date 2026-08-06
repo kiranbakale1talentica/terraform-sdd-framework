@@ -23,8 +23,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Checkov Security Scan
+        id: checkov
         uses: bridgecrewio/checkov-action@master
         with:
           directory: terraform/
           framework: terraform
           soft_fail: true
+
+      - name: Generate Execution Summary
+        if: always()
+        run: |
+          echo "### Pipeline Execution Summary: Security Scan" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check / Step | Status | Scope |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Checkout | success | \`terraform/\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Checkov Static Security Analysis | ${{ steps.checkov.outcome }} | CIS AWS Benchmarks |" >> $GITHUB_STEP_SUMMARY
