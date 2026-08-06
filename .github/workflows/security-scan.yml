@@ -1,12 +1,8 @@
-name: 'Security Scan'
+name: 'Security Scan (Checkov Audit)'
+run-name: 'Security Scan: Checkov Audit - PR #${{ github.event.number || github.ref_name }}'
 
 on:
   pull_request:
-    branches: [ "main" ]
-    paths:
-      - 'terraform/**'
-      - '.github/workflows/**'
-  push:
     branches: [ "main" ]
     paths:
       - 'terraform/**'

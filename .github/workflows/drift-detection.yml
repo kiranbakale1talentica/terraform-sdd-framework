@@ -1,4 +1,5 @@
-name: 'Drift Detection'
+name: 'Drift Detection (Weekly Audit)'
+run-name: 'Drift Detection: Check Infrastructure Drift (${{ github.ref_name }})'
 
 on:
   schedule:

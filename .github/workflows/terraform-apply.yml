@@ -1,4 +1,5 @@
-name: 'Terraform Apply'
+name: 'Terraform Apply (Deployment)'
+run-name: 'Terraform Apply: Deploy to AWS (${{ github.ref_name }})'
 
 on:
   push:

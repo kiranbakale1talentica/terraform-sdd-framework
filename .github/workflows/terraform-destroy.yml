@@ -1,4 +1,5 @@
-name: 'Terraform Destroy'
+name: 'Terraform Destroy (Teardown)'
+run-name: 'Terraform Destroy: Teardown ${{ github.event.inputs.service }}'
 
 on:
   workflow_dispatch:
