@@ -1,0 +1,9 @@
+aws_region        = "ap-south-1"
+project_prefix    = "terraform-sdd"
+environment       = "dev"
+service_name      = "user-profiles"
+billing_mode      = "PAY_PER_REQUEST"
+enable_pitr       = true
+enable_encryption = true
+owner             = "User Service Team"
+cost_center       = "DevOps-102"
