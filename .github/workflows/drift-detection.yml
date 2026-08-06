@@ -50,7 +50,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: ./terraform/services/${{ github.event.inputs.service || 'first-s3-bucket' }}/dev
-        run: terraform init
+        run: terraform init -input=false
 
       - name: Check Drift
         id: drift
