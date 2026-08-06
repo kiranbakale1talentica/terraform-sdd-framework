@@ -135,7 +135,14 @@ jobs:
         uses: actions/github-script@v7
         if: github.event_name == 'pull_request'
         env:
-          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+          PLAN_STDOUT: ${{ steps.plan.outputs.stdout }}
+          DIR_OUTCOME: ${{ steps.dir.outcome }}
+          DIR_PATH: ${{ steps.dir.outputs.working_dir }}
+          FMT_OUTCOME: ${{ steps.fmt.outcome }}
+          TFLINT_OUTCOME: ${{ steps.tflint.outcome }}
+          INIT_OUTCOME: ${{ steps.init.outcome }}
+          VALIDATE_OUTCOME: ${{ steps.validate.outcome }}
+          PLAN_OUTCOME: ${{ steps.plan.outcome }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -144,43 +151,44 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-            const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes('### Pipeline Execution Summary: Terraform Plan & Validate');
-            });
+            const botComment = comments.find(c => c.user.type === 'Bot' && c.body.includes('Pipeline Execution Summary: Terraform Plan & Validate'));
 
-            const output = `### Pipeline Execution Summary: Terraform Plan & Validate
-
-| Check / Step | Status | Target Directory |
-| :--- | :--- | :--- |
-| Working Directory Discovery | \`${{ steps.dir.outcome }}\` | \`${{ steps.dir.outputs.working_dir }}\` |
-| Terraform Format Check | \`${{ steps.fmt.outcome }}\` | \`${{ steps.dir.outputs.working_dir }}\` |
-| TFLint Static Analysis | \`${{ steps.tflint.outcome }}\` | \`${{ steps.dir.outputs.working_dir }}\` |
-| Terraform Initialization | \`${{ steps.init.outcome }}\` | \`${{ steps.dir.outputs.working_dir }}\` |
-| Terraform Syntax Validation | \`${{ steps.validate.outcome }}\` | \`${{ steps.dir.outputs.working_dir }}\` |
-| Terraform Execution Plan | \`${{ steps.plan.outcome }}\` | \`${{ steps.dir.outputs.working_dir }}\` |
-
-<details><summary>View Full Terraform Plan Output</summary>
-
-\`\`\`\n
-${process.env.PLAN}
-\`\`\`
-
-</details>
-
-*Triggered by: @${context.actor} | Commit: [${context.sha.substring(0, 7)}](https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha})*`;
+            const planOutput = process.env.PLAN_STDOUT || 'No execution plan output recorded.';
+            const body = [
+              '### Pipeline Execution Summary: Terraform Plan & Validate',
+              '',
+              '| Check / Step | Status | Target Directory |',
+              '| :--- | :--- | :--- |',
+              `| Working Directory Discovery | \`${process.env.DIR_OUTCOME}\` | \`${process.env.DIR_PATH}\` |`,
+              `| Terraform Format Check | \`${process.env.FMT_OUTCOME}\` | \`${process.env.DIR_PATH}\` |`,
+              `| TFLint Static Analysis | \`${process.env.TFLINT_OUTCOME}\` | \`${process.env.DIR_PATH}\` |`,
+              `| Terraform Initialization | \`${process.env.INIT_OUTCOME}\` | \`${process.env.DIR_PATH}\` |`,
+              `| Terraform Syntax Validation | \`${process.env.VALIDATE_OUTCOME}\` | \`${process.env.DIR_PATH}\` |`,
+              `| Terraform Execution Plan | \`${process.env.PLAN_OUTCOME}\` | \`${process.env.DIR_PATH}\` |`,
+              '',
+              '<details><summary>View Full Terraform Plan Output</summary>',
+              '',
+              '```hcl',
+              planOutput,
+              '```',
+              '',
+              '</details>',
+              '',
+              `*Triggered by: @${context.actor} | Commit: [${context.sha.substring(0, 7)}](https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha})*`
+            ].join('\n');
 
             if (botComment) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 comment_id: botComment.id,
-                body: output
+                body: body
               });
             } else {
               await github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: output
+                body: body
               });
             }
