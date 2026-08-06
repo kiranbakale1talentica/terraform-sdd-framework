@@ -1,12 +1,14 @@
 # Terraform SDD Framework
 
-> **A cloud-provider-neutral starter kit for Specification Driven Development (SDD) of cloud infrastructure with Terraform.**
+> **An AWS-focused starter kit for Specification Driven Development (SDD) of cloud infrastructure with Terraform (AWS supported currently).**
 
 ---
 
 ## What Is This?
 
-This is a **starter kit** — not a ready-to-deploy stack. It gives you a reusable, AI-agent-compatible workflow and repository structure so your team can design, generate, validate, and deploy cloud infrastructure in a consistent, auditable way.
+This is a **starter kit** — not a ready-to-deploy stack. It gives you a reusable, AI-agent-compatible workflow and repository structure so your team can design, generate, validate, and deploy AWS cloud infrastructure in a consistent, auditable way.
+
+> **Note:** Currently, this framework specifically supports **AWS** (Amazon Web Services). Support for additional cloud providers (Azure, GCP) will be added in future updates.
 
 It enforces a structured **6-phase gated lifecycle** before any `terraform apply` ever runs:
 
@@ -20,10 +22,10 @@ It enforces a structured **6-phase gated lifecycle** before any `terraform apply
 
 | Component | Default |
 |-----------|---------|
-| **Cloud** | Configured during `/spec` — AWS, Azure, GCP, or multi-cloud |
+| **Cloud** | **AWS** (Amazon Web Services — currently supported provider) |
 | **CI/CD** | GitHub Actions (`.github/workflows/`) |
-| **Auth** | OIDC federated identity (no long-lived credentials) |
-| **IaC** | Terraform `>= 1.6.0` |
+| **Auth** | AWS OIDC federated identity (no long-lived credentials) |
+| **IaC** | Terraform `>= 1.10.0` |
 | **Quality** | TFLint + Checkov + Infracost |
 
 ---
@@ -73,21 +75,16 @@ cd my-infra
 pre-commit install
 ```
 
-### 3. Configure Your Cloud Credentials
+### 3. Configure Your AWS Credentials
 
-Follow your cloud provider's guide for local authentication:
-- **AWS:** `aws configure` or set up `AWS_PROFILE`
-- **Azure:** `az login`
-- **GCP:** `gcloud auth application-default login`
+Set up your AWS CLI locally:
+- `aws configure` or set up your `AWS_PROFILE` (e.g. `export AWS_PROFILE=my-aws-profile`)
 
 ### 4. Set Up GitHub Actions OIDC (For CI/CD)
 
-Configure your cloud provider to trust GitHub Actions via OIDC (no access keys needed):
-- **AWS:** [docs.github.com — AWS OIDC](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services)
-- **Azure:** [docs.github.com — Azure OIDC](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-azure)
-- **GCP:** [docs.github.com — GCP OIDC](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-google-cloud-platform)
-
-Then update the `OIDC_ROLE_ARN` (or equivalent) in your `.github/workflows/*.yml` files.
+Configure AWS to trust GitHub Actions via OIDC:
+- Use [ `templates/bootstrap-aws.tf` ](file:///c:/Users/kiranb/DevOps-projects/spec-driven-terraform/templates/bootstrap-aws.tf) to set up the OIDC provider and execution role in your AWS account.
+- Update `OIDC_ROLE_ARN` in `.github/workflows/*.yml` files.
 
 ### 5. Start Your First Infrastructure Spec
 

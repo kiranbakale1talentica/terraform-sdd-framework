@@ -34,8 +34,7 @@ variable "project_prefix" {
 
 variable "github_org_repo" {
   type        = string
-  default     = "kiranbakale1talentica/terraform-sdd-framework"
-  description = "GitHub organization/username and repository name (e.g. org/repo)"
+  description = "GitHub organization/username and repository name (e.g. org/repo or org/repo:*)"
 }
 
 # ─── 1. S3 Bucket for Terraform Remote State & Native Locking ────────────────
@@ -105,10 +104,7 @@ resource "aws_iam_role" "github_actions" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringLike = {
-            "token.actions.githubusercontent.com:sub" = [
-              "repo:${var.github_org_repo}:*",
-              "repo:kiranbakale1talentica@173769807/terraform-sdd-framework@1321761587:*"
-            ]
+            "token.actions.githubusercontent.com:sub" = "repo:${var.github_org_repo}:*"
           }
         }
       }
