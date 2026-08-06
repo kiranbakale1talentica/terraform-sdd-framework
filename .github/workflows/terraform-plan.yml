@@ -9,9 +9,14 @@ on:
   workflow_dispatch:
     inputs:
       service:
-        description: 'Service to plan'
+        description: 'Service to plan (e.g. first-s3-bucket)'
         required: false
         default: 'first-s3-bucket'
+        type: string
+      environment:
+        description: 'Environment to plan (e.g. dev)'
+        required: false
+        default: 'dev'
         type: string
 
 permissions:
@@ -29,13 +34,35 @@ jobs:
     name: 'Validate and Plan'
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ./terraform/services/${{ github.event.inputs.service || 'first-s3-bucket' }}/dev
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Discover Service Working Directory
+        id: dir
+        run: |
+          if [ -n "${{ github.event.inputs.service }}" ]; then
+            TARGET_DIR="terraform/services/${{ github.event.inputs.service }}/${{ github.event.inputs.environment || 'dev' }}"
+          else
+            # Automatically find the first modified terraform/services directory in PR
+            CHANGED_DIR=$(git diff --name-only origin/main...HEAD | grep '^terraform/services/' | head -n 1 | cut -d'/' -f1-4)
+            if [ -n "$CHANGED_DIR" ]; then
+              TARGET_DIR="$CHANGED_DIR"
+            else
+              # Fallback: search for any existing environment directory
+              TARGET_DIR=$(find terraform/services -mindepth 2 -maxdepth 2 -type d | head -n 1)
+            fi
+          fi
+
+          if [ -z "$TARGET_DIR" ] || [ ! -d "$TARGET_DIR" ]; then
+            echo "No valid terraform service directory found to execute plan."
+            exit 1
+          fi
+
+          echo "working_dir=$TARGET_DIR" >> $GITHUB_OUTPUT
+          echo "Selected working directory: $TARGET_DIR"
 
       - name: Configure AWS Credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v5
@@ -52,7 +79,8 @@ jobs:
 
       - name: Terraform Format Check
         id: fmt
-        run: terraform fmt -check -recursive ../../..
+        run: terraform fmt -check -recursive
+        working-directory: ${{ steps.dir.outputs.working_dir }}
         continue-on-error: true
 
       - name: Setup TFLint
@@ -62,25 +90,30 @@ jobs:
 
       - name: Init TFLint
         run: tflint --init
+        working-directory: ${{ steps.dir.outputs.working_dir }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Run TFLint
         id: tflint
         run: tflint -f compact --recursive
+        working-directory: ${{ steps.dir.outputs.working_dir }}
         continue-on-error: true
 
       - name: Terraform Init
         id: init
         run: terraform init -input=false
+        working-directory: ${{ steps.dir.outputs.working_dir }}
 
       - name: Terraform Validate
         id: validate
         run: terraform validate -no-color
+        working-directory: ${{ steps.dir.outputs.working_dir }}
 
       - name: Terraform Plan
         id: plan
         run: terraform plan -no-color -input=false -out=tfplan
+        working-directory: ${{ steps.dir.outputs.working_dir }}
         continue-on-error: true
 
       - name: Post PR Comment

@@ -48,13 +48,30 @@ jobs:
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
+      - name: Discover Service Working Directory
+        id: dir
+        run: |
+          if [ -n "${{ github.event.inputs.service }}" ]; then
+            TARGET_DIR="terraform/services/${{ github.event.inputs.service }}/dev"
+          else
+            TARGET_DIR=$(find terraform/services -mindepth 2 -maxdepth 2 -type d | head -n 1)
+          fi
+
+          if [ -z "$TARGET_DIR" ] || [ ! -d "$TARGET_DIR" ]; then
+            echo "No valid terraform service directory found for drift detection."
+            exit 0
+          fi
+
+          echo "working_dir=$TARGET_DIR" >> $GITHUB_OUTPUT
+          echo "Selected working directory: $TARGET_DIR"
+
       - name: Terraform Init
-        working-directory: ./terraform/services/${{ github.event.inputs.service || 'first-s3-bucket' }}/dev
+        working-directory: ${{ steps.dir.outputs.working_dir }}
         run: terraform init -input=false
 
       - name: Check Drift
         id: drift
-        working-directory: ./terraform/services/${{ github.event.inputs.service || 'first-s3-bucket' }}/dev
+        working-directory: ${{ steps.dir.outputs.working_dir }}
         run: |
           terraform plan -detailed-exitcode -no-color -out=drift_plan || exit_code=$?
           echo "exit_code=$exit_code" >> $GITHUB_OUTPUT

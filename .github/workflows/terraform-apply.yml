@@ -27,13 +27,34 @@ jobs:
     name: Apply first-s3-bucket dev
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ./terraform/services/${{ github.event.inputs.service || 'first-s3-bucket' }}/dev
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Discover Service Working Directory
+        id: dir
+        run: |
+          if [ -n "${{ github.event.inputs.service }}" ]; then
+            TARGET_DIR="terraform/services/${{ github.event.inputs.service }}/dev"
+          else
+            # Automatically find the first modified terraform/services directory
+            CHANGED_DIR=$(git diff --name-only HEAD~1...HEAD | grep '^terraform/services/' | head -n 1 | cut -d'/' -f1-4)
+            if [ -n "$CHANGED_DIR" ]; then
+              TARGET_DIR="$CHANGED_DIR"
+            else
+              TARGET_DIR=$(find terraform/services -mindepth 2 -maxdepth 2 -type d | head -n 1)
+            fi
+          fi
+
+          if [ -z "$TARGET_DIR" ] || [ ! -d "$TARGET_DIR" ]; then
+            echo "No valid terraform service directory found to execute apply."
+            exit 1
+          fi
+
+          echo "working_dir=$TARGET_DIR" >> $GITHUB_OUTPUT
+          echo "Selected working directory: $TARGET_DIR"
 
       - name: Configure AWS Credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v5
@@ -50,6 +71,8 @@ jobs:
 
       - name: Terraform Init
         run: terraform init -input=false
+        working-directory: ${{ steps.dir.outputs.working_dir }}
 
       - name: Terraform Apply
         run: terraform apply -auto-approve -input=false
+        working-directory: ${{ steps.dir.outputs.working_dir }}
