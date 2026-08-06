@@ -250,9 +250,9 @@ resource "aws_iam_role_policy" "github_actions_permissions" {
       },
       # ── STS: verify caller identity after assume (used by configure-aws-credentials) ─
       {
-        Sid    = "STSGetCallerIdentity"
-        Effect = "Allow"
-        Action = ["sts:GetCallerIdentity"]
+        Sid      = "STSGetCallerIdentity"
+        Effect   = "Allow"
+        Action   = ["sts:GetCallerIdentity"]
         Resource = ["*"]
       }
     ]

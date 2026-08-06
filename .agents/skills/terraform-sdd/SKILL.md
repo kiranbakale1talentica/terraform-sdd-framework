@@ -16,29 +16,69 @@ Infrastructure without a specification is guessing. This skill enforces a **six-
 The workflow mirrors the software spec-driven approach but is purpose-built for **cloud infrastructure only**: Terraform, cloud provisioning, and infrastructure automation.
 
 ```
-Requirement
+New Project / Account
      │
      ▼
-/spec ─── Infrastructure Specification
+/bootstrap ─ AWS OIDC & State Storage Bootstrap
+     │           (runs templates/bootstrap-aws.tf -> S3 state bucket + OIDC IAM Role)
+     ▼
+/spec ────── Infrastructure Specification
      │           (infrastructure-spec.yaml + architecture.md + ADRs)
      ▼
-/plan ─── Architecture + Terraform Plan
+/plan ────── Architecture + Terraform Plan
      │           (terraform-plan.md + module dependency graph)
      ▼
-/build ── Terraform Generation
+/build ───── Terraform Generation
      │           (main.tf, variables.tf, outputs.tf, modules)
      ▼
-/test ─── Validation
+/test ────── Validation
      │           (fmt + validate + tflint + terraform test)
      ▼
-/review ─ Security + Quality Review
+/review ──── Security + Quality Review
      │           (Checkov + tfsec + cost estimate)
      ▼
-/ship ─── Deployment Readiness
-              (deployment-readiness.md signed off)
+/ship ────── Deployment Readiness
+                 (deployment-readiness.md signed off)
 ```
 
 **No phase may be skipped. No gate may be soft-bypassed.**
+
+---
+
+## Phase 0: /bootstrap — AWS State & OIDC Identity Setup
+
+When `/bootstrap` is triggered or when starting in a new AWS account:
+
+1. **Step 1: Authenticate & Confirm Credentials:**
+   Ask the user to ensure their local AWS CLI profile is authenticated with an IAM Identity (User or Role) that has permissions to create IAM Roles (`iam:CreateRole`, `iam:PutRolePolicy`, `iam:CreateOpenIDConnectProvider`) and S3 Buckets (`s3:CreateBucket`, `s3:PutBucketVersioning`, `s3:PutEncryptionConfiguration`).
+   *Ask the user for their exact AWS Profile name (e.g. `export AWS_PROFILE=my-aws-profile`).*
+
+2. **Step 2: Explain Purpose & CI/CD Mechanics:**
+   Explain to the user **WHY** we are running bootstrap:
+   - *"We are creating a dedicated **S3 Remote State Bucket** to safely lock and store Terraform state files."*
+   - *"We are creating a **GitHub Actions OIDC IAM Role** so GitHub Actions CI/CD pipelines can authenticate to AWS keylessly (without long-lived secret keys) to provision resources on your behalf."*
+
+3. **Step 3: Confirm Resource Names & Parameters:**
+   Confirm the target resource names with the user before applying:
+   - **S3 State Bucket Name:** `terraform-sdd-tfstate-<aws-account-id>`
+   - **GitHub Actions IAM Role Name:** `<project-prefix>-actions-role` (e.g. `terraform-sdd-actions-role`)
+   - **GitHub Repository Identifier:** `<github-org>/<github-repo>`
+
+4. **Step 4: Execute Bootstrap & Output Secret:**
+   Execute `templates/bootstrap-aws.tf` using the user's confirmed AWS profile.
+
+5. **Gate Rule (STOP & WAIT):** Output the generated `s3_bucket_name` and `github_actions_role_arn`. Instruct the user to save `AWS_ROLE_ARN` in GitHub Repo Secrets before moving to Phase 1 (`/spec`).
+
+---
+
+## ⛔ Gated Phase Execution Rules (CRITICAL)
+
+The agent MUST enforce a strict **STOP & WAIT** behavior between every phase:
+
+1. **ONE PHASE PER TURN:** The agent MUST NOT execute more than ONE phase per turn under any circumstances.
+2. **EXPLICIT HUMAN APPROVAL:** At the end of every phase, the agent MUST output the generated artifact links and explicitly ask:
+   > *"Phase [N] complete. Please review the generated artifacts above. Reply with approval or next command to proceed to Phase [N+1]."*
+3. **STRICT BLOCKING:** Do NOT generate `.tf` code during `/spec` or `/plan`. Do NOT run security scans during `/build`. Follow the 6-phase sequence strictly step-by-step.
 
 ---
 

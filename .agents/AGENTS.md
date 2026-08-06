@@ -151,18 +151,22 @@ terraform {
 
 ---
 
-## Phase Gate Rules
+## Phase Gate Execution Rules (STRICT STOP & WAIT)
 
-| Phase | Entry Condition | Exit Condition |
-|-------|----------------|----------------|
-| `/spec` | Engineer describes a workload | `infrastructure-spec.yaml` reviewed and approved |
-| `/plan` | Approved spec exists | `architecture.md` + ADRs written, plan reviewed |
-| `/build` | Approved plan exists | Terraform generated, `terraform fmt` clean |
-| `/test` | Build complete | `fmt` + `validate` + `tflint` + unit tests pass |
-| `/review` | Tests pass | Security scan + cost estimate reviewed |
-| `/ship` | Review approved | Deployment readiness checklist signed off |
+> **CRITICAL RULE FOR AGENT:** **One turn = One Phase only.**
+> NEVER execute multiple phases in a single turn. At the end of each phase, the agent MUST STOP, present the generated artifact, and explicitly WAIT for human approval before proceeding.
 
-**No phase may be skipped. No gate may be soft-bypassed.**
+| Phase | Entry Condition | Action Output | Gate Rule (Stop & Wait) |
+|-------|----------------|---------------|-------------------------|
+| **`/bootstrap`** (Phase 0) | New workspace or account | Runs `templates/bootstrap-aws.tf` (S3 State Bucket + OIDC Role) | **STOP & WAIT for Bootstrap Provisioning Confirmation** |
+| **`/spec`** (Phase 1) | User describes workload | `infrastructure-spec.yaml`, `architecture.md`, ADRs | **STOP & WAIT for Spec Approval** |
+| **`/plan`** (Phase 2) | Approved spec exists | `terraform-plan.md` | **STOP & WAIT for Architecture Plan Approval** |
+| **`/build`** (Phase 3) | Approved plan exists | Terraform `.tf` files generated & `fmt` clean | **STOP & WAIT for Code Structure Review** |
+| **`/test`** (Phase 4) | Build complete | `validate` + `tflint` + `terraform test` pass | **STOP & WAIT for Test Validation Pass** |
+| **`/review`** (Phase 5) | Tests pass | Checkov security scan + cost estimate | **STOP & WAIT for Security & Cost Approval** |
+| **`/ship`** (Phase 6) | Review approved | `deployment-readiness.md` signed off | **STOP & WAIT for Pull Request / Deployment Sign-off** |
+
+**No phase may be skipped. No gate may be soft-bypassed. Multi-phase auto-advancement is STRICTLY FORBIDDEN.**
 
 ---
 
